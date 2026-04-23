@@ -24,7 +24,9 @@ export function QrScanner({ onDecode, onError, disabled }: QrScannerProps) {
           (r, err) => {
             if (stopped) return
             if (r) {
-              onDecode(r.getText())
+              const text = r.getText()
+              console.log('QR scanned successfully:', text)
+              onDecode(text)
             } else if (err && err.name !== 'NotFoundException') {
               setError(err.message)
               onError?.(err as Error)

@@ -1,2 +1,3 @@
-export { QrScanner } from './qrScanner'
-export type { QrScannerProps } from './types'
+export * from './qrScanner'
+export * from './qrImageUpload'
+export * from './types'

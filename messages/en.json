@@ -17,5 +17,9 @@
     "close": "Close",
     "edit": "Edit",
     "delete": "Delete"
+  },
+  "pair": {
+    "uploadImage": "Upload QR Image",
+    "invalidQr": "No QR code found in image"
   }
 }

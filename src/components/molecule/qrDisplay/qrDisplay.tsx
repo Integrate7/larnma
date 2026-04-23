@@ -19,7 +19,7 @@ export function QrDisplay({
       return
     }
     let cancelled = false
-    QRCode.toDataURL(value, { width: size, margin: 1 }).then(
+    QRCode.toDataURL(value, { width: size, margin: 4 }).then(
       (url) => {
         if (!cancelled) setSrc(url)
       },

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { Button } from '@/components/atom/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/atom/card'
-import { QrScanner } from '@/components/molecule/qrScanner'
+import { QrScanner, QrImageUpload } from '@/components/molecule/qrScanner'
 import { useTranslations } from 'next-intl'
 import { usePairController } from './controller/controller'
 
@@ -31,12 +31,25 @@ export function PairPage() {
             {t('pair.subtitle')}
           </p>
           {state.state === 'ready' ? (
-            <Button onClick={handler.startScan} size="xl" data-testid="pair-start">
-              เปิดกล้อง
-            </Button>
+            <div className="flex w-full flex-col gap-3">
+              <Button onClick={handler.startScan} size="xl" data-testid="pair-start">
+                เปิดกล้อง
+              </Button>
+              <div className="relative flex items-center py-2">
+                <div className="flex-grow border-t border-muted" />
+                <span className="mx-4 flex-shrink text-sm text-muted-foreground">หรือ</span>
+                <div className="flex-grow border-t border-muted" />
+              </div>
+              <QrImageUpload onDecode={handler.onDecode} onError={handler.onError} />
+            </div>
           ) : null}
           {state.state === 'scanning' ? (
-            <QrScanner onDecode={handler.onDecode} onError={handler.onError} />
+            <div className="flex w-full flex-col items-center gap-4">
+              <QrScanner onDecode={handler.onDecode} onError={handler.onError} />
+              <div className="w-full border-t pt-4">
+                <QrImageUpload onDecode={handler.onDecode} onError={handler.onError} />
+              </div>
+            </div>
           ) : null}
           {state.state === 'pairing' ? (
             <p className="text-lg">{t('common.loading')}</p>
@@ -45,13 +58,19 @@ export function PairPage() {
             <p className="text-xl text-primary">{t('pair.success')}</p>
           ) : null}
           {state.state === 'error' && state.errorMessage ? (
-            <div className="flex flex-col items-center gap-3">
-              <p role="alert" className="text-destructive">
+            <div className="flex w-full flex-col items-center gap-3">
+              <p role="alert" className="text-destructive text-center">
                 {state.errorMessage}
               </p>
-              <Button onClick={handler.startScan} size="xl">
+              <Button onClick={handler.startScan} size="xl" className="w-full">
                 {t('common.retry')}
               </Button>
+              <div className="relative flex w-full items-center py-2">
+                <div className="flex-grow border-t border-muted" />
+                <span className="mx-4 flex-shrink text-sm text-muted-foreground">หรือ</span>
+                <div className="flex-grow border-t border-muted" />
+              </div>
+              <QrImageUpload onDecode={handler.onDecode} onError={handler.onError} />
             </div>
           ) : null}
         </CardContent>

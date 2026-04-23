@@ -68,7 +68,9 @@
     "subtitle": "เปิดกล้องแล้วสแกน QR จากลูกหลาน",
     "scanning": "กำลังสแกน...",
     "permissionDenied": "กรุณาอนุญาตใช้กล้อง",
-    "success": "เชื่อมต่อสำเร็จ"
+    "success": "เชื่อมต่อสำเร็จ",
+    "uploadImage": "อัพโหลดรูป QR",
+    "invalidQr": "ไม่พบ QR Code ในรูปภาพ"
   },
   "register": {
     "step": "ขั้นที่ {current} จาก {total}",

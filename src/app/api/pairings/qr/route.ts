@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     },
     ADAPTER_CONFIG.pairingQrTtlSec,
   )
-  const qrDataUrl = await QRCode.toDataURL(signed.token, { width: 320, margin: 1 })
+  const qrDataUrl = await QRCode.toDataURL(signed.token, { width: 512, margin: 4 })
   return NextResponse.json({
     qrDataUrl,
     token: signed.token,
