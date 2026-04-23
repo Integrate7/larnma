@@ -5,12 +5,20 @@ import type { useElderHomeGlobalState } from './globalState'
 type GS = ReturnType<typeof useElderHomeGlobalState>
 
 const MAX_DURATION_MS = 30_000
+const SILENCE_THRESHOLD = 0.02
+const SILENCE_DURATION_MS = 1500
+
+type WindowWithWebkitAudio = Window & {
+  webkitAudioContext?: typeof AudioContext
+}
 
 export function useElderHomeHandler(gs: GS) {
   const recorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const streamRef = useRef<MediaStream | null>(null)
   const stopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const vadRafRef = useRef<number | null>(null)
 
   const uploadBlob = async (blob: Blob) => {
     gs.setMicState('uploading')
@@ -37,11 +45,60 @@ export function useElderHomeHandler(gs: GS) {
     }
   }
 
+  const stopVAD = () => {
+    if (vadRafRef.current !== null) {
+      cancelAnimationFrame(vadRafRef.current)
+      vadRafRef.current = null
+    }
+    if (audioCtxRef.current) {
+      audioCtxRef.current.close().catch(() => {})
+      audioCtxRef.current = null
+    }
+  }
+
+  const startVAD = (stream: MediaStream) => {
+    const w = window as WindowWithWebkitAudio
+    const AC = window.AudioContext ?? w.webkitAudioContext
+    if (!AC) return
+    const ctx = new AC()
+    audioCtxRef.current = ctx
+    const src = ctx.createMediaStreamSource(stream)
+    const analyser = ctx.createAnalyser()
+    analyser.fftSize = 2048
+    src.connect(analyser)
+    const buf = new Uint8Array(analyser.fftSize)
+    let silenceStart = Date.now()
+    let hasSpoken = false
+
+    const tick = () => {
+      if (!audioCtxRef.current) return
+      analyser.getByteTimeDomainData(buf)
+      let sum = 0
+      for (let i = 0; i < buf.length; i++) {
+        const v = (buf[i] - 128) / 128
+        sum += v * v
+      }
+      const rms = Math.sqrt(sum / buf.length)
+      const now = Date.now()
+      if (rms > SILENCE_THRESHOLD) {
+        silenceStart = now
+        hasSpoken = true
+      }
+      if (hasSpoken && now - silenceStart > SILENCE_DURATION_MS) {
+        stopRecording()
+        return
+      }
+      vadRafRef.current = requestAnimationFrame(tick)
+    }
+    vadRafRef.current = requestAnimationFrame(tick)
+  }
+
   const stopRecording = () => {
     if (stopTimerRef.current) {
       clearTimeout(stopTimerRef.current)
       stopTimerRef.current = null
     }
+    stopVAD()
     try {
       recorderRef.current?.stop()
     } catch {
@@ -71,6 +128,7 @@ export function useElderHomeHandler(gs: GS) {
       recorderRef.current.start()
       gs.setMicState('listening')
       stopTimerRef.current = setTimeout(stopRecording, MAX_DURATION_MS)
+      startVAD(streamRef.current)
     } catch (e) {
       gs.setErrorMessage(e instanceof Error ? e.message : String(e))
       gs.setMicState('error')
@@ -78,9 +136,10 @@ export function useElderHomeHandler(gs: GS) {
   }
 
   const onPress = () => {
-    if (gs.gs.micState === 'idle' || gs.gs.micState === 'error') {
+    const s = gs.gs.micState
+    if (s === 'idle' || s === 'wakeListening' || s === 'error') {
       void startRecording()
-    } else if (gs.gs.micState === 'listening') {
+    } else if (s === 'listening') {
       stopRecording()
     }
   }

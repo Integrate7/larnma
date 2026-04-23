@@ -12,6 +12,7 @@ export type GeminiAnalysis = {
   mood: Mood
   confidence: number
   summary: string
+  advice?: string
   entities: Record<string, unknown>
 }
 

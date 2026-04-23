@@ -1,9 +1,10 @@
 import { Loader2, Mic, MicOff } from 'lucide-react'
-import type { MicButtonProps, MicButtonState } from './types'
 import { cn } from '@/shared/helpers/cn'
+import type { MicButtonProps, MicButtonState } from './types'
 
 const STATE_CLASS: Record<MicButtonState, string> = {
   idle: 'bg-primary hover:bg-primary/90',
+  wakeListening: 'bg-primary/80 ring-4 ring-primary/30 animate-pulse',
   listening: 'bg-destructive animate-pulse',
   uploading: 'bg-primary/70',
   done: 'bg-mood-happy',
@@ -12,6 +13,7 @@ const STATE_CLASS: Record<MicButtonState, string> = {
 
 const LABEL_DEFAULT: Record<MicButtonState, string> = {
   idle: 'แตะเพื่อพูด',
+  wakeListening: 'พูด "หลานรัก" ได้เลย',
   listening: 'กำลังฟัง...',
   uploading: 'กำลังส่ง...',
   done: 'เรียบร้อย',
@@ -19,7 +21,8 @@ const LABEL_DEFAULT: Record<MicButtonState, string> = {
 }
 
 export function MicButton({ state, onPress, disabled, label }: MicButtonProps) {
-  const isBusy = state === 'listening' || state === 'uploading'
+  const isBusy =
+    state === 'listening' || state === 'uploading' || state === 'wakeListening'
   const Icon =
     state === 'uploading' ? Loader2 : state === 'error' ? MicOff : Mic
   const shownLabel = label ?? LABEL_DEFAULT[state]
