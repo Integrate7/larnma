@@ -4,7 +4,7 @@ import { QrScanner } from '../qrScanner'
 const decodeFromVideoDevice = jest.fn()
 
 jest.mock('@zxing/browser', () => ({
-  BrowserMultiFormatReader: jest.fn().mockImplementation(() => ({
+  BrowserQRCodeReader: jest.fn().mockImplementation(() => ({
     decodeFromVideoDevice,
   })),
 }))
@@ -38,23 +38,30 @@ describe('QrScanner', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('permission denied')
   })
 
-  it('ignores NotFoundException noise', async () => {
+  it('ignores transient per-frame decode exceptions', async () => {
     const onError = jest.fn()
     decodeFromVideoDevice.mockImplementation(
       async (_id: string | undefined, _video: HTMLVideoElement, cb: any) => {
-        const err = new Error('not found')
-        err.name = 'NotFoundException'
-        cb(undefined, err)
+        for (const name of [
+          'NotFoundException',
+          'ChecksumException',
+          'FormatException',
+        ]) {
+          const err = new Error(name.toLowerCase())
+          err.name = name
+          cb(undefined, err)
+        }
         return { stop: jest.fn() }
       },
     )
     render(<QrScanner onDecode={() => {}} onError={onError} />)
-    await new Promise((r) => setTimeout(r, 10))
+    await new Promise((r) => setTimeout(r, 120))
     expect(onError).not.toHaveBeenCalled()
   })
 
-  it('does not start when disabled', () => {
+  it('does not start when disabled', async () => {
     render(<QrScanner onDecode={() => {}} disabled />)
+    await new Promise((r) => setTimeout(r, 120))
     expect(decodeFromVideoDevice).not.toHaveBeenCalled()
   })
 })

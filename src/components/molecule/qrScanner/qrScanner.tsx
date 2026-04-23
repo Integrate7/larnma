@@ -1,53 +1,73 @@
 'use client'
 
-import { BrowserMultiFormatReader } from '@zxing/browser'
+import { BrowserQRCodeReader } from '@zxing/browser'
+import { DecodeHintType } from '@zxing/library'
 import { useEffect, useRef, useState } from 'react'
 import type { QrScannerProps } from './types'
 
+const TRANSIENT_DECODE_ERRORS = new Set([
+  'NotFoundException',
+  'ChecksumException',
+  'FormatException',
+])
+
 export function QrScanner({ onDecode, onError, disabled }: QrScannerProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
+  const onDecodeRef = useRef(onDecode)
+  const onErrorRef = useRef(onError)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    onDecodeRef.current = onDecode
+    onErrorRef.current = onError
+  })
+
+  useEffect(() => {
     if (disabled) return
-    const reader = new BrowserMultiFormatReader()
-    let stopped = false
-    // Cleanup handle for the scanner controls (returned by decodeFromVideoDevice)
+    const hints = new Map()
+    hints.set(DecodeHintType.TRY_HARDER, true)
+    const reader = new BrowserQRCodeReader(hints)
+    let cancelled = false
     let controls: { stop: () => void } | null = null
 
-    const start = async () => {
+    // Defer start: React StrictMode in dev runs mount → cleanup → remount
+    // synchronously. Without this delay, the discarded mount calls getUserMedia,
+    // attaches a stream, and its stop() wipes videoElement.srcObject right after
+    // the real mount installed its own stream — resulting in a black video.
+    const startTimer = setTimeout(async () => {
       try {
         if (!videoRef.current) return
         const result = await reader.decodeFromVideoDevice(
           undefined,
           videoRef.current,
           (r, err) => {
-            if (stopped) return
+            if (cancelled) return
             if (r) {
-              const text = r.getText()
-              console.log('QR scanned successfully:', text)
-              onDecode(text)
-            } else if (err && err.name !== 'NotFoundException') {
+              onDecodeRef.current(r.getText())
+            } else if (err && !TRANSIENT_DECODE_ERRORS.has(err.name)) {
               setError(err.message)
-              onError?.(err as Error)
+              onErrorRef.current?.(err as Error)
             }
           },
         )
+        if (cancelled) {
+          result.stop()
+          return
+        }
         controls = result
       } catch (e) {
         const err = e instanceof Error ? e : new Error(String(e))
         setError(err.message)
-        onError?.(err)
+        onErrorRef.current?.(err)
       }
-    }
-
-    void start()
+    }, 50)
 
     return () => {
-      stopped = true
+      cancelled = true
+      clearTimeout(startTimer)
       controls?.stop()
     }
-  }, [onDecode, onError, disabled])
+  }, [disabled])
 
   return (
     <div className="relative w-full max-w-sm" data-slot="qr-scanner">
