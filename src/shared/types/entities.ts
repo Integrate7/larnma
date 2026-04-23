@@ -170,3 +170,11 @@ export type Invite = {
   acceptedByCaregiverId?: string
   acceptedAt?: string
 }
+
+export type ElderLocation = {
+  elderId: string
+  lat: number
+  lng: number
+  accuracy?: number
+  capturedAt: string
+}
