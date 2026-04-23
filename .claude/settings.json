@@ -2,5 +2,21 @@
   "permissions": {
     "defaultMode": "bypassPermissions",
     "allow": ["Bash", "Edit", "Write", "Read", "Glob", "Grep"]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "docs/agents/hooks/quality-gate.sh",
+            "asyncRewake": true,
+            "timeout": 900,
+            "statusMessage": "Running quality gate (lint + coverage + build + sonar)…",
+            "rewakeSummary": "Quality gate failed — fix before declaring done"
+          }
+        ]
+      }
+    ]
   }
 }
