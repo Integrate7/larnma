@@ -1,12 +1,12 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/atom/button'
 import { Card } from '@/components/atom/card'
 import { MoodChip } from '@/components/molecule/moodChip'
 import { PriorityBadge } from '@/components/molecule/priorityBadge'
-import { Button } from '@/components/atom/button'
-import { useDashboardController } from './controller/controller'
 import type { Mood } from '@/shared/types'
+import { useDashboardController } from './controller/controller'
 
 export function DashboardPage() {
   const t = useTranslations()
@@ -154,10 +154,7 @@ export function DashboardPage() {
                     {t('food.pay')}
                   </Button>
                 ) : alreadyOrdered ? (
-                  <span
-                    className="mono-label"
-                    style={{ color: 'var(--ok)' }}
-                  >
+                  <span className="mono-label" style={{ color: 'var(--ok)' }}>
                     {t('food.paid')}
                   </span>
                 ) : (

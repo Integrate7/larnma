@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import QRCode from 'qrcode'
+import { useEffect, useState } from 'react'
 import { Skeleton } from '@/components/atom/skeleton'
 import type { QrDisplayProps } from './types'
 
@@ -76,7 +76,9 @@ function QrExpiry({ expiresAt }: { expiresAt: Date }) {
     }, 1000)
     return () => clearInterval(t)
   }, [])
-  const mm = Math.floor(remaining / 60).toString().padStart(2, '0')
+  const mm = Math.floor(remaining / 60)
+    .toString()
+    .padStart(2, '0')
   const ss = (remaining % 60).toString().padStart(2, '0')
   return (
     <span className="mono-label" data-testid="qr-expiry">

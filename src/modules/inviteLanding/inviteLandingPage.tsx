@@ -4,9 +4,9 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/atom/button'
 import { Input } from '@/components/atom/input'
+import { Skeleton } from '@/components/atom/skeleton'
 import { FormField } from '@/components/molecule/formField'
 import { OtpInput } from '@/components/molecule/otpInput'
-import { Skeleton } from '@/components/atom/skeleton'
 import { useInviteLandingController } from './controller/controller'
 
 export function InviteLandingPage({ token }: { token: string }) {

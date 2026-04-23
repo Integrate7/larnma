@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { registerDefaults, registerFormSchema } from '../../schema'
 import type { RegisterForm, RegisterFormValues } from '../../types'

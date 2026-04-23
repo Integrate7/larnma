@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import type { RegisterGlobalState, RegisterStep } from '../../types'
 import { REGISTER_STEPS } from '../../types'
 

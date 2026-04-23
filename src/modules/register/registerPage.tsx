@@ -1,21 +1,21 @@
 'use client'
 
 import { useEffect } from 'react'
-import { REGISTER_STEPS } from './types'
 import { useRegisterController } from './controller/controller'
+import { REGISTER_STEPS } from './types'
 import {
   CaregiverStep,
-  WelcomeStep,
   ChoiceStep,
-  PhoneStep,
   ConsentStep,
   ElderBasicStep,
   ElderEmergencyStep,
   ElderHealthStep,
   ElderOptionalStep,
   OtpStep,
+  PhoneStep,
   QrStep,
   ReviewStep,
+  WelcomeStep,
 } from './views/stepViews'
 
 export function RegisterPage() {
@@ -72,7 +72,9 @@ export function RegisterPage() {
       {state.step === 'consent' ? <ConsentStep {...props} /> : null}
       {state.step === 'elderBasic' ? <ElderBasicStep {...props} /> : null}
       {state.step === 'elderHealth' ? <ElderHealthStep {...props} /> : null}
-      {state.step === 'elderEmergency' ? <ElderEmergencyStep {...props} /> : null}
+      {state.step === 'elderEmergency' ? (
+        <ElderEmergencyStep {...props} />
+      ) : null}
       {state.step === 'elderOptional' ? <ElderOptionalStep {...props} /> : null}
       {state.step === 'review' ? <ReviewStep {...props} /> : null}
       {state.step === 'qr' ? (

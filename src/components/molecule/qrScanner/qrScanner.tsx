@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
 import { BrowserMultiFormatReader } from '@zxing/browser'
+import { useEffect, useRef, useState } from 'react'
 import type { QrScannerProps } from './types'
 
 export function QrScanner({ onDecode, onError, disabled }: QrScannerProps) {
@@ -70,7 +70,11 @@ export function QrScanner({ onDecode, onError, disabled }: QrScannerProps) {
         />
       </div>
       {error ? (
-        <p className="mt-2 serif-caption" role="alert" style={{ color: 'var(--danger)' }}>
+        <p
+          className="mt-2 serif-caption"
+          role="alert"
+          style={{ color: 'var(--danger)' }}
+        >
           {error}
         </p>
       ) : null}

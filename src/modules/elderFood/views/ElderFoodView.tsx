@@ -1,11 +1,11 @@
 import { AlertTriangle, ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/atom/button'
 import { Card, CardContent } from '@/components/atom/card'
 import { Skeleton } from '@/components/atom/skeleton'
-import { useTranslations } from 'next-intl'
-import type { ElderFoodState } from '../types'
 import type { ElderFoodHandler } from '../controller/hooks/handler'
+import type { ElderFoodState } from '../types'
 
 type Props = {
   state: ElderFoodState
@@ -20,9 +20,7 @@ export function ElderFoodView({ state, handler }: Props) {
       <main className="elder-mode mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-6 px-5 py-6">
         <CheckCircle2 className="h-20 w-20" style={{ color: 'var(--ok)' }} />
         <p className="text-center text-3xl font-bold">{t('food.requested')}</p>
-        <p className="serif-caption text-center text-xl">
-          {t('food.waiting')}
-        </p>
+        <p className="serif-caption text-center text-xl">{t('food.waiting')}</p>
         <Button asChild size="xl" variant="outline">
           <Link href="/elder">
             <ArrowLeft className="mr-2 h-5 w-5" />
@@ -36,7 +34,12 @@ export function ElderFoodView({ state, handler }: Props) {
   return (
     <main className="elder-mode mx-auto flex min-h-screen max-w-xl flex-col gap-5 px-5 py-6">
       <header className="flex items-center gap-3 border-b border-[var(--rule)] pb-3">
-        <Button asChild size="icon" variant="outline" aria-label={t('elder.back')}>
+        <Button
+          asChild
+          size="icon"
+          variant="outline"
+          aria-label={t('elder.back')}
+        >
           <Link href="/elder">
             <ArrowLeft className="h-5 w-5" />
           </Link>

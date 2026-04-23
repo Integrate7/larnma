@@ -1,12 +1,7 @@
 import { useMemo, useState } from 'react'
-import type {
-  AudioEvent,
-  Mood,
-  Notification,
-  Priority,
-} from '@/shared/types'
-import type { DashboardGlobalState } from '../../types'
+import type { AudioEvent, Mood, Notification, Priority } from '@/shared/types'
 import { MOODS } from '@/shared/types'
+import type { DashboardGlobalState } from '../../types'
 
 export function useDashboardGlobalState() {
   const [events, setEvents] = useState<AudioEvent[]>([])
@@ -58,7 +53,9 @@ export function useDashboardGlobalState() {
   void ({} as Priority) // keep import alive when tree-shaken
 
   const addOrderedEventId = (eventId: string) =>
-    setOrderedEventIds((prev) => (prev.includes(eventId) ? prev : [...prev, eventId]))
+    setOrderedEventIds((prev) =>
+      prev.includes(eventId) ? prev : [...prev, eventId],
+    )
 
   return {
     state,

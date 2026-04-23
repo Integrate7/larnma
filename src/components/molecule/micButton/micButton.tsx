@@ -18,7 +18,7 @@ function ListeningBars() {
     <div className="flex h-9 items-end gap-1">
       {BAR_HEIGHTS.map((h, i) => (
         <span
-          key={i}
+          key={`bar-${h}-${i}`}
           className="w-1 rounded-sm bg-white animate-pulse"
           style={{ height: h, animationDelay: `${i * 80}ms` }}
         />
@@ -34,8 +34,8 @@ export function MicButton({ state, onPress, disabled, label }: MicButtonProps) {
     state === 'error'
       ? 'radial-gradient(circle at 40% 35%, oklch(0.58 0.2 28), oklch(0.4 0.2 28))'
       : state === 'done'
-      ? 'radial-gradient(circle at 40% 35%, var(--ok), oklch(0.38 0.12 160))'
-      : 'radial-gradient(circle at 40% 35%, oklch(0.52 0.2 300), oklch(0.32 0.2 300))'
+        ? 'radial-gradient(circle at 40% 35%, var(--ok), oklch(0.38 0.12 160))'
+        : 'radial-gradient(circle at 40% 35%, oklch(0.52 0.2 300), oklch(0.32 0.2 300))'
 
   const ringShadow =
     '0 0 0 6px color-mix(in oklch, var(--brand) 14%, transparent), 0 0 0 14px color-mix(in oklch, var(--brand) 6%, transparent)'
@@ -56,13 +56,21 @@ export function MicButton({ state, onPress, disabled, label }: MicButtonProps) {
         className={cn(
           'grid place-items-center rounded-full text-white transition-transform focus:outline-none disabled:opacity-50 active:scale-[0.98]',
         )}
-        style={{ width: 130, height: 130, background: circleBg, boxShadow: ringShadow }}
+        style={{
+          width: 130,
+          height: 130,
+          background: circleBg,
+          boxShadow: ringShadow,
+        }}
       >
         {state === 'listening' ? (
           <ListeningBars />
         ) : (
           <Icon
-            className={cn('h-14 w-14', state === 'uploading' ? 'animate-spin' : '')}
+            className={cn(
+              'h-14 w-14',
+              state === 'uploading' ? 'animate-spin' : '',
+            )}
             aria-hidden="true"
           />
         )}

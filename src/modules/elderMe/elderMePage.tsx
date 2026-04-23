@@ -1,12 +1,17 @@
 'use client'
 
-import Link from 'next/link'
 import { ArrowLeft, Phone } from 'lucide-react'
-import { Button } from '@/components/atom/button'
-import { Skeleton } from '@/components/atom/skeleton'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/atom/card'
-import { Badge } from '@/components/atom/badge'
+import Link from 'next/link'
 import { useTranslations } from 'next-intl'
+import { Badge } from '@/components/atom/badge'
+import { Button } from '@/components/atom/button'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/atom/card'
+import { Skeleton } from '@/components/atom/skeleton'
 import { useElderMeController } from './controller/controller'
 
 export function ElderMePage() {
@@ -111,8 +116,8 @@ export function ElderMePage() {
               <CardTitle className="mono-label">ที่อยู่</CardTitle>
             </CardHeader>
             <CardContent className="text-xl">
-              {state.data.addressLine} {state.data.district} {state.data.province}{' '}
-              {state.data.postalCode}
+              {state.data.addressLine} {state.data.district}{' '}
+              {state.data.province} {state.data.postalCode}
             </CardContent>
           </Card>
 

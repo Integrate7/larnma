@@ -1,10 +1,10 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useEffect, useRef } from 'react'
 import { Button } from '@/components/atom/button'
-import { QrScanner, QrImageUpload } from '@/components/molecule/qrScanner'
-import { useTranslations } from 'next-intl'
+import { QrImageUpload, QrScanner } from '@/components/molecule/qrScanner'
 import { usePairController } from './controller/controller'
 
 export function PairPage() {

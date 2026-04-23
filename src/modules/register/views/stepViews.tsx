@@ -51,7 +51,10 @@ export function WelcomeStep({ onNext }: { onNext: () => void }) {
 export function ChoiceStep({
   onNext,
   onGoogle,
-}: { onNext: () => void; onGoogle: () => void }) {
+}: {
+  onNext: () => void
+  onGoogle: () => void
+}) {
   const t = useTranslations()
   return (
     <Card>
@@ -648,9 +651,7 @@ export function QrStep({
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">
-        <p className="serif-caption text-center">
-          {t('register.qrSubtitle')}
-        </p>
+        <p className="serif-caption text-center">{t('register.qrSubtitle')}</p>
         {qrDataUrl ? (
           <QrDisplay
             value={pairingToken ?? ''}

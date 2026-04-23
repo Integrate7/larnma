@@ -1,5 +1,9 @@
 import { useState } from 'react'
-import type { AnnotatedMenuItem, ElderFoodState, FoodRequestStatus } from '../../types'
+import type {
+  AnnotatedMenuItem,
+  ElderFoodState,
+  FoodRequestStatus,
+} from '../../types'
 
 export function useElderFoodGlobalState() {
   const [menus, setMenus] = useState<AnnotatedMenuItem[]>([])
@@ -8,7 +12,13 @@ export function useElderFoodGlobalState() {
   const [selectedMenuId, setSelectedMenuId] = useState<string | null>(null)
   const [requestStatus, setRequestStatus] = useState<FoodRequestStatus>('idle')
 
-  const gs: ElderFoodState = { menus, loading, error, selectedMenuId, requestStatus }
+  const gs: ElderFoodState = {
+    menus,
+    loading,
+    error,
+    selectedMenuId,
+    requestStatus,
+  }
 
   return {
     gs,

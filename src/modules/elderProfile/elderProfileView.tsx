@@ -1,9 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { Button } from '@/components/atom/button'
 import { Badge } from '@/components/atom/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/atom/card'
+import { Button } from '@/components/atom/button'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/atom/card'
 import { Skeleton } from '@/components/atom/skeleton'
 import { useElderProfileController } from './controller/controller'
 

@@ -19,10 +19,14 @@ export function useElderFoodHandler(gs: GlobalStateSetter) {
   const onConfirm = useCallback(async () => {
     if (!gs.gs.selectedMenuId) return
     gs.setRequestStatus('requesting')
-    const result = await fetcher('/api/elder/food/request', requestResponseSchema, {
-      method: 'POST',
-      body: { menuId: gs.gs.selectedMenuId },
-    })
+    const result = await fetcher(
+      '/api/elder/food/request',
+      requestResponseSchema,
+      {
+        method: 'POST',
+        body: { menuId: gs.gs.selectedMenuId },
+      },
+    )
     if (result.success) {
       gs.setRequestStatus('requested')
     } else {

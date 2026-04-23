@@ -3,11 +3,16 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/atom/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/atom/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/atom/card'
 import { Input } from '@/components/atom/input'
+import { Skeleton } from '@/components/atom/skeleton'
 import { Textarea } from '@/components/atom/textarea'
 import { FormField } from '@/components/molecule/formField'
-import { Skeleton } from '@/components/atom/skeleton'
 import { useElderProfileController } from './controller/controller'
 
 export function ElderProfileEdit({ elderId }: { elderId: string }) {
@@ -93,11 +98,7 @@ export function ElderProfileEdit({ elderId }: { elderId: string }) {
               />
             </FormField>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="xl"
-                onClick={() => router.back()}
-              >
+              <Button variant="outline" size="xl" onClick={() => router.back()}>
                 ยกเลิก
               </Button>
               <Button

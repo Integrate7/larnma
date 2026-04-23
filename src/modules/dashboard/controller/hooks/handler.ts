@@ -13,7 +13,10 @@ export function useDashboardHandler(args: {
   const ack = async (notificationId: string) => {
     const res = await fetcher(
       `/api/notifications/${notificationId}/ack`,
-      z.object({ locked: z.boolean(), lockedByCaregiverId: z.string().optional() }),
+      z.object({
+        locked: z.boolean(),
+        lockedByCaregiverId: z.string().optional(),
+      }),
       { method: 'POST', body: {} },
     )
     if (res.success) {

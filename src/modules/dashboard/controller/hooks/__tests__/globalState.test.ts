@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
-import { useDashboardGlobalState } from '../globalState'
 import type { AudioEvent, Notification } from '@/shared/types'
+import { useDashboardGlobalState } from '../globalState'
 
 const sampleEvent = (id: string, mood: AudioEvent['mood']): AudioEvent => ({
   id,
@@ -35,9 +35,7 @@ describe('useDashboardGlobalState', () => {
     act(() => result.current.prependNotification(sampleNoti('N1')))
     act(() => result.current.prependNotification(sampleNoti('N1')))
     expect(result.current.state.notifications).toHaveLength(1)
-    act(() =>
-      result.current.updateNotification('N1', { ackAt: '2026-04-23' }),
-    )
+    act(() => result.current.updateNotification('N1', { ackAt: '2026-04-23' }))
     expect(result.current.state.notifications[0].ackAt).toBe('2026-04-23')
   })
 
