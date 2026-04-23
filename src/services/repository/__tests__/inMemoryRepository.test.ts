@@ -231,3 +231,51 @@ describe('InMemoryRepository', () => {
     expect(r.getUserByPhone('any')).toBeUndefined()
   })
 })
+
+describe('elder location', () => {
+  let repo: ReturnType<typeof createInMemoryRepository>
+  beforeEach(() => {
+    repo = createInMemoryRepository()
+  })
+
+  it('returns undefined when no location set', () => {
+    expect(repo.getElderLocation('unknown')).toBeUndefined()
+  })
+
+  it('stores and retrieves a location', () => {
+    const loc = repo.setElderLocation({
+      elderId: 'e1',
+      lat: 13.7563,
+      lng: 100.5018,
+      capturedAt: '2026-04-23T10:00:00Z',
+    })
+    expect(repo.getElderLocation('e1')).toEqual(loc)
+  })
+
+  it('overwrites previous location for same elder', () => {
+    repo.setElderLocation({
+      elderId: 'e1',
+      lat: 13.7,
+      lng: 100.5,
+      capturedAt: '2026-04-23T09:00:00Z',
+    })
+    repo.setElderLocation({
+      elderId: 'e1',
+      lat: 14.0,
+      lng: 101.0,
+      capturedAt: '2026-04-23T10:00:00Z',
+    })
+    expect(repo.getElderLocation('e1')?.lat).toBe(14.0)
+  })
+
+  it('clears on reset', () => {
+    repo.setElderLocation({
+      elderId: 'e1',
+      lat: 13.7,
+      lng: 100.5,
+      capturedAt: '2026-04-23T10:00:00Z',
+    })
+    repo.reset()
+    expect(repo.getElderLocation('e1')).toBeUndefined()
+  })
+})
