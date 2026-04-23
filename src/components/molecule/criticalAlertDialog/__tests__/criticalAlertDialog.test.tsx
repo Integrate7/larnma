@@ -129,4 +129,11 @@ describe('CriticalAlertDialog — interaction', () => {
     renderDialog({ open: false })
     expect(screen.queryByText(/titleCritical/)).not.toBeInTheDocument()
   })
+
+  it('invokes onClose when Escape triggers the dialog onOpenChange', async () => {
+    const onClose = jest.fn()
+    renderDialog({ onClose })
+    await userEvent.keyboard('{Escape}')
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
 })
