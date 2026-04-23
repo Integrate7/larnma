@@ -6,6 +6,7 @@ import { MoodChip } from '@/components/molecule/moodChip'
 import { PriorityBadge } from '@/components/molecule/priorityBadge'
 import { Button } from '@/components/atom/button'
 import { useDashboardController } from './controller/controller'
+import { InviteSection } from './views/inviteSection/inviteSection'
 import type { Mood } from '@/shared/types'
 import dynamic from 'next/dynamic'
 
@@ -18,6 +19,7 @@ export function DashboardPage() {
   const t = useTranslations()
   const { state, handler } = useDashboardController()
   const latest = state.events[0]
+  const primary = state.pairings.find((p) => p.isPrimary)
 
   return (
     <main className="mx-auto flex max-w-4xl flex-col gap-4 p-6">
@@ -79,6 +81,8 @@ export function DashboardPage() {
           </ul>
         </CardContent>
       </Card>
+
+      <InviteSection elderId={primary?.elderId ?? ''} isPrimary={!!primary} />
 
       <Card>
         <CardHeader>
