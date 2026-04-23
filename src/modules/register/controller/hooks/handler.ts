@@ -8,8 +8,9 @@ type GS = ReturnType<typeof useRegisterGlobalState>
 export function useRegisterHandler(args: {
   form: RegisterForm
   gs: GS
+  navigate?: (url: string) => void
 }): RegisterHandler {
-  const { form, gs } = args
+  const { form, gs, navigate = (url) => window.location.assign(url) } = args
 
   const setBusy = (b: boolean) => gs.setSubmitting(b)
   const setErr = (m: string | null) => gs.setErrorMessage(m)
@@ -215,9 +216,7 @@ export function useRegisterHandler(args: {
   }
 
   const onGoogle = () => {
-    // In a real app, this would redirect to Google OAuth
-    // For this prototype, we'll redirect to our mock endpoint
-    window.location.href = '/api/auth/google'
+    navigate('/api/auth/google')
   }
 
   const next = async () => {
