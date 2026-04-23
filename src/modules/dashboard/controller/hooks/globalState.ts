@@ -17,6 +17,7 @@ export function useDashboardGlobalState() {
   const [pairings, setPairings] = useState<PairingInfo[]>([])
   const [locations, setLocations] = useState<ElderLocation[]>([])
   const [orderedEventIds, setOrderedEventIds] = useState<string[]>([])
+  const [orderStatuses, setOrderStatuses] = useState<Record<string, string>>({})
 
   const moodCounts = useMemo<Record<Mood, number>>(() => {
     const out = Object.fromEntries(MOODS.map((m) => [m, 0])) as Record<
@@ -36,6 +37,7 @@ export function useDashboardGlobalState() {
     pairings,
     locations,
     orderedEventIds,
+    orderStatuses,
   }
 
   const prependEvent = (e: AudioEvent) =>
@@ -65,6 +67,9 @@ export function useDashboardGlobalState() {
   const addOrderedEventId = (eventId: string) =>
     setOrderedEventIds((prev) => (prev.includes(eventId) ? prev : [...prev, eventId]))
 
+  const updateOrderStatus = (orderId: string, status: string) =>
+    setOrderStatuses((prev) => ({ ...prev, [orderId]: status }))
+
   return {
     state,
     setConnecting,
@@ -76,5 +81,6 @@ export function useDashboardGlobalState() {
     updateNotification,
     replaceAll,
     addOrderedEventId,
+    updateOrderStatus,
   }
 }

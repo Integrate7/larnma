@@ -43,7 +43,7 @@ function setupMediaMocks() {
 function renderAll() {
   return renderHook(() => {
     const gs = useElderHomeGlobalState()
-    const handler = useElderHomeHandler(gs)
+    const handler = useElderHomeHandler(gs, { current: () => {} })
     return { gs, handler }
   })
 }

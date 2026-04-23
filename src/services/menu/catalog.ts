@@ -113,4 +113,11 @@ export const MENU_CATALOG: MenuItem[] = [
     conditionsExcluded: ['เบาหวาน', 'ความดันสูง'],
     allergensContained: ['นม'],
   },
+  {
+    id: 'kung-tod-kratiem',
+    name: 'กุ้งทอดกระเทียม',
+    price: 130,
+    conditionsExcluded: [],
+    allergensContained: ['กุ้ง'],
+  },
 ]

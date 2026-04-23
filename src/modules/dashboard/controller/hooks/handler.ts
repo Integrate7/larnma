@@ -26,11 +26,13 @@ export function useDashboardHandler(args: {
     }
   }
 
-  const order = async (notification: Notification, events: AudioEvent[]) => {
+  const order = async (notification: Notification, events: AudioEvent[], menuId: string) => {
     const event = events.find((e) => e.id === notification.eventId)
     if (!event) return
-    const { food, price } = event.entities as { food?: string; price?: number }
-    if (!food || price === undefined) return
+
+    const suggestions = (event.entities as { menuSuggestions?: { id: string; name: string; price: number }[] }).menuSuggestions ?? []
+    const chosen = suggestions.find((m) => m.id === menuId)
+    if (!chosen) return
 
     const res = await fetcher(
       '/api/orders',
@@ -40,12 +42,13 @@ export function useDashboardHandler(args: {
         body: {
           elderId: event.elderId,
           eventId: event.id,
-          menu: [{ name: food, price, qty: 1 }],
+          menu: [{ name: chosen.name, price: chosen.price, qty: 1 }],
         },
       },
     )
     if (res.success) {
       args.gs.addOrderedEventId(event.id)
+      args.gs.updateOrderStatus(res.data.id, res.data.status)
     } else {
       args.gs.setError(res.error)
     }
