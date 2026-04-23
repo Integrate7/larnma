@@ -153,3 +153,121 @@ describe('useCriticalAlerts — derivation', () => {
     expect(result.current.elderPhone).toBeNull()
   })
 })
+
+describe('useCriticalAlerts — handlers', () => {
+  const { navigateToTel } = jest.requireMock('../telNavigation') as {
+    navigateToTel: jest.Mock
+  }
+
+  beforeEach(() => {
+    navigateToTel.mockClear()
+  })
+
+  it('onClose marks all current cases as shown and closes', () => {
+    const notis = [makeNoti({ id: 'N1', priority: 'critical' })]
+    const { result, rerender } = renderHook(
+      ({ n }: { n: Notification[] }) =>
+        useCriticalAlerts(n, [], ELDER, noopAck),
+      { initialProps: { n: notis } },
+    )
+    expect(result.current.open).toBe(true)
+
+    result.current.onClose()
+    rerender({ n: notis })
+
+    expect(result.current.open).toBe(false)
+  })
+
+  it('onCallElder fires ackFn once per displayed case and navigates', async () => {
+    const ack = jest.fn().mockResolvedValue(undefined)
+    const notis = [
+      makeNoti({ id: 'N1', priority: 'critical', eventId: 'E1' }),
+      makeNoti({ id: 'N2', priority: 'high', eventId: 'E2' }),
+    ]
+    const events = [makeEvent({ id: 'E1' }), makeEvent({ id: 'E2' })]
+    const { result } = renderHook(() =>
+      useCriticalAlerts(notis, events, ELDER, ack),
+    )
+
+    result.current.onCallElder()
+
+    await new Promise((r) => setTimeout(r, 0))
+
+    expect(ack).toHaveBeenCalledTimes(2)
+    expect(ack).toHaveBeenCalledWith('N1')
+    expect(ack).toHaveBeenCalledWith('N2')
+    expect(navigateToTel).toHaveBeenCalledWith('0812345678')
+  })
+
+  it('onCall1669 fires ackFn for each case and navigates to tel:1669', async () => {
+    const ack = jest.fn().mockResolvedValue(undefined)
+    const notis = [makeNoti({ id: 'N1', priority: 'critical' })]
+    const events = [makeEvent({ id: 'E1' })]
+    const { result } = renderHook(() =>
+      useCriticalAlerts(notis, events, ELDER, ack),
+    )
+
+    result.current.onCall1669()
+    await new Promise((r) => setTimeout(r, 0))
+
+    expect(ack).toHaveBeenCalledWith('N1')
+    expect(navigateToTel).toHaveBeenCalledWith('1669')
+  })
+
+  it('onCallElder is a no-op when elderPhone is null', () => {
+    const ack = jest.fn().mockResolvedValue(undefined)
+    const notis = [makeNoti({ id: 'N1', priority: 'critical' })]
+    const events = [makeEvent({ id: 'E1' })]
+    const { result } = renderHook(() =>
+      useCriticalAlerts(notis, events, { name: 'ย่า', phone: null }, ack),
+    )
+
+    result.current.onCallElder()
+
+    expect(ack).not.toHaveBeenCalled()
+    expect(navigateToTel).not.toHaveBeenCalled()
+  })
+
+  it('does not crash when ackFn rejects; dialog still closes', async () => {
+    const ack = jest.fn().mockRejectedValue(new Error('500'))
+    const errSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    const notis = [makeNoti({ id: 'N1', priority: 'critical' })]
+    const events = [makeEvent({ id: 'E1' })]
+    const { result, rerender } = renderHook(
+      ({ n }: { n: Notification[] }) =>
+        useCriticalAlerts(n, events, ELDER, ack),
+      { initialProps: { n: notis } },
+    )
+
+    result.current.onCall1669()
+    await new Promise((r) => setTimeout(r, 0))
+    rerender({ n: notis })
+
+    expect(result.current.open).toBe(false)
+    expect(errSpy).toHaveBeenCalled()
+    errSpy.mockRestore()
+  })
+
+  it('SSE appending a critical to a high-only dialog upgrades tone', () => {
+    const initial: Notification[] = [
+      makeNoti({ id: 'N1', priority: 'high', eventId: 'E1' }),
+    ]
+    const added: Notification[] = [
+      makeNoti({ id: 'N2', priority: 'critical', eventId: 'E2' }),
+      ...initial,
+    ]
+    const events = [makeEvent({ id: 'E1' }), makeEvent({ id: 'E2' })]
+    const { result, rerender } = renderHook(
+      ({ n }: { n: Notification[] }) =>
+        useCriticalAlerts(n, events, ELDER, noopAck),
+      { initialProps: { n: initial } },
+    )
+
+    expect(result.current.tone).toBe('high')
+
+    rerender({ n: added })
+
+    expect(result.current.tone).toBe('critical')
+    expect(result.current.cases).toHaveLength(2)
+  })
+})
