@@ -2,12 +2,17 @@
 
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/atom/button'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/atom/card'
 import { Input } from '@/components/atom/input'
 import { Textarea } from '@/components/atom/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/atom/card'
+import { ConsentToggle } from '@/components/molecule/consentToggle'
 import { FormField } from '@/components/molecule/formField'
 import { OtpInput } from '@/components/molecule/otpInput'
-import { ConsentToggle } from '@/components/molecule/consentToggle'
 import { QrDisplay } from '@/components/molecule/qrDisplay'
 import type { RegisterForm } from '../types'
 
@@ -228,10 +233,7 @@ export function ElderBasicStep({
         >
           <Input id="elderPhone" type="tel" {...form.register('elderPhone')} />
         </FormField>
-        <FormField
-          label="วันเกิด"
-          htmlFor="birthdate"
-        >
+        <FormField label="วันเกิด" htmlFor="birthdate">
           <Input id="birthdate" type="date" {...form.register('birthdate')} />
         </FormField>
         <FormField
@@ -240,7 +242,11 @@ export function ElderBasicStep({
           required
           error={form.formState.errors.addressLine?.message}
         >
-          <Textarea id="addressLine" rows={2} {...form.register('addressLine')} />
+          <Textarea
+            id="addressLine"
+            rows={2}
+            {...form.register('addressLine')}
+          />
         </FormField>
         <div className="grid grid-cols-2 gap-3">
           <FormField
@@ -287,7 +293,15 @@ export function ElderBasicStep({
   )
 }
 
-function csv(form: RegisterForm, field: 'conditions' | 'symptoms' | 'allergies' | 'foodPreferences' | 'foodDislikes') {
+function csv(
+  form: RegisterForm,
+  field:
+    | 'conditions'
+    | 'symptoms'
+    | 'allergies'
+    | 'foodPreferences'
+    | 'foodDislikes',
+) {
   const list = form.watch(field) ?? []
   return {
     value: (list as string[]).join(', '),
@@ -353,23 +367,53 @@ export function ElderEmergencyStep({ form, onNext, onBack }: StepProps) {
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-3">
-          <FormField label="โรงพยาบาล">
+          <FormField
+            label="โรงพยาบาล"
+            error={form.formState.errors.hospitalName?.message}
+          >
             <Input {...form.register('hospitalName')} placeholder="ชื่อ รพ." />
           </FormField>
-          <FormField label="เบอร์" error={form.formState.errors.hospitalPhone?.message}>
-            <Input {...form.register('hospitalPhone')} type="tel" inputMode="numeric" />
+          <FormField
+            label="เบอร์"
+            error={form.formState.errors.hospitalPhone?.message}
+          >
+            <Input
+              {...form.register('hospitalPhone')}
+              type="tel"
+              inputMode="numeric"
+            />
           </FormField>
-          <FormField label="หมอประจำ">
+          <FormField
+            label="หมอประจำ"
+            error={form.formState.errors.doctorName?.message}
+          >
             <Input {...form.register('doctorName')} />
           </FormField>
-          <FormField label="เบอร์หมอ" error={form.formState.errors.doctorPhone?.message}>
-            <Input {...form.register('doctorPhone')} type="tel" inputMode="numeric" />
+          <FormField
+            label="เบอร์หมอ"
+            error={form.formState.errors.doctorPhone?.message}
+          >
+            <Input
+              {...form.register('doctorPhone')}
+              type="tel"
+              inputMode="numeric"
+            />
           </FormField>
-          <FormField label="ญาติสำรอง">
+          <FormField
+            label="ญาติสำรอง"
+            error={form.formState.errors.backupName?.message}
+          >
             <Input {...form.register('backupName')} />
           </FormField>
-          <FormField label="เบอร์ญาติ" error={form.formState.errors.backupPhone?.message}>
-            <Input {...form.register('backupPhone')} type="tel" inputMode="numeric" />
+          <FormField
+            label="เบอร์ญาติ"
+            error={form.formState.errors.backupPhone?.message}
+          >
+            <Input
+              {...form.register('backupPhone')}
+              type="tel"
+              inputMode="numeric"
+            />
           </FormField>
         </div>
         <div className="flex gap-2">
@@ -397,7 +441,10 @@ export function ElderOptionalStep({ form, onNext, onBack }: StepProps) {
       <CardContent className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-3">
           <FormField label="กรุ๊ปเลือด">
-            <Input {...form.register('bloodType')} placeholder="A / B / O / AB" />
+            <Input
+              {...form.register('bloodType')}
+              placeholder="A / B / O / AB"
+            />
           </FormField>
           <FormField label="ส่วนสูง (ซม.)">
             <Input
@@ -413,7 +460,10 @@ export function ElderOptionalStep({ form, onNext, onBack }: StepProps) {
           </FormField>
         </div>
         <FormField label="อาหารที่ชอบ">
-          <Input value={prefs.value} onChange={(e) => prefs.set(e.target.value)} />
+          <Input
+            value={prefs.value}
+            onChange={(e) => prefs.set(e.target.value)}
+          />
         </FormField>
         <FormField label="อาหารที่ไม่ชอบ">
           <Input

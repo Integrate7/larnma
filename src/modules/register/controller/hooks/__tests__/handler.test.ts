@@ -55,7 +55,10 @@ describe('useRegisterHandler', () => {
 
   it('sendOtp: surfaces server error', async () => {
     mockFetchSequence([
-      { status: 429, body: { error: 'RATE_LIMITED', errorCode: 'RATE_LIMITED' } },
+      {
+        status: 429,
+        body: { error: 'RATE_LIMITED', errorCode: 'RATE_LIMITED' },
+      },
     ])
     const { result } = renderHandler()
     act(() => result.current.form.setValue('phone', '0812345678'))
@@ -124,6 +127,89 @@ describe('useRegisterHandler', () => {
       await result.current.handler.submitConsent()
     })
     expect(result.current.gs.state.step).toBe('elderBasic')
+  })
+
+  it('next: elderEmergency blocks when contact name set without phone', async () => {
+    const { result } = renderHandler()
+    act(() => {
+      result.current.gs.goto('elderEmergency')
+      result.current.form.setValue('hospitalName', 'รพ.')
+      result.current.form.setValue('hospitalPhone', '')
+    })
+    await act(async () => {
+      await result.current.handler.next()
+    })
+    expect(result.current.gs.state.step).toBe('elderEmergency')
+    expect(
+      result.current.form.getFieldState('hospitalPhone').error?.message,
+    ).toBe('กรุณากรอกเบอร์โทร')
+  })
+
+  it('next: elderEmergency blocks when phone set without name', async () => {
+    const { result } = renderHandler()
+    act(() => {
+      result.current.gs.goto('elderEmergency')
+      result.current.form.setValue('doctorName', '')
+      result.current.form.setValue('doctorPhone', '0812345678')
+    })
+    await act(async () => {
+      await result.current.handler.next()
+    })
+    expect(result.current.gs.state.step).toBe('elderEmergency')
+    expect(result.current.form.getFieldState('doctorName').error?.message).toBe(
+      'กรุณากรอกชื่อ',
+    )
+  })
+
+  it('next: elderEmergency blocks when phone format invalid', async () => {
+    const { result } = renderHandler()
+    act(() => {
+      result.current.gs.goto('elderEmergency')
+      result.current.form.setValue('backupName', 'พี่')
+      result.current.form.setValue('backupPhone', '123')
+    })
+    await act(async () => {
+      await result.current.handler.next()
+    })
+    expect(result.current.gs.state.step).toBe('elderEmergency')
+    expect(
+      result.current.form.getFieldState('backupPhone').error?.message,
+    ).toBe('เบอร์ต้องเป็น 10 หลัก')
+  })
+
+  it('next: elderEmergency passes when all contacts are empty', async () => {
+    const { result } = renderHandler()
+    act(() => {
+      result.current.gs.goto('elderEmergency')
+    })
+    await act(async () => {
+      await result.current.handler.next()
+    })
+    expect(result.current.gs.state.step).toBe('elderOptional')
+  })
+
+  it('submitElder: rejects when emergency contact has name without phone', async () => {
+    const fetchMock = jest.fn()
+    ;(global.fetch as jest.Mock) = fetchMock
+    const { result } = renderHandler()
+    act(() => {
+      result.current.form.setValue('elderName', 'ย่า')
+      result.current.form.setValue('elderPhone', '0899999999')
+      result.current.form.setValue('addressLine', 'a')
+      result.current.form.setValue('district', 'd')
+      result.current.form.setValue('province', 'p')
+      result.current.form.setValue('postalCode', '10100')
+      result.current.form.setValue('hospitalName', 'รพ.')
+      result.current.form.setValue('hospitalPhone', '')
+    })
+    await act(async () => {
+      await result.current.handler.submitElder()
+    })
+    expect(result.current.gs.state.elderId).toBeNull()
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(
+      result.current.form.getFieldState('hospitalPhone').error?.message,
+    ).toBe('กรุณากรอกเบอร์โทร')
   })
 
   it('submitElder: happy path advances to qr + stores elderId', async () => {
