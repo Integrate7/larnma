@@ -146,8 +146,6 @@ export function DashboardPage() {
         </CardContent>
       </Card>
 
-      <InviteSection elderId={primary?.elderId ?? ''} isPrimary={!!primary} />
-
       <Card>
         <CardHeader>
           <CardTitle>การแจ้งเตือน</CardTitle>
@@ -248,6 +246,8 @@ export function DashboardPage() {
           </ul>
         </CardContent>
       </Card>
+
+      <InviteSection elderId={primary?.elderId ?? ''} isPrimary={!!primary} />
 
       <Card>
         <CardHeader>
