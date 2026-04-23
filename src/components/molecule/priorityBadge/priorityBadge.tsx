@@ -2,26 +2,28 @@ import type { Priority } from '@/shared/types'
 import type { PriorityBadgeProps } from './types'
 
 const LABEL: Record<Priority, string> = {
-  critical: '🚨 ฉุกเฉิน',
-  high: '⚠️ สำคัญ',
-  normal: 'ℹ️ ปกติ',
-  log: '📊 บันทึก',
+  critical: 'CRITICAL',
+  high: 'HIGH',
+  normal: 'NORMAL',
+  log: 'LOG',
 }
 
-const CLASS: Record<Priority, string> = {
-  critical: 'bg-mood-danger text-white',
-  high: 'bg-mood-pain text-white',
-  normal: 'bg-mood-normal text-white',
-  log: 'bg-muted text-muted-foreground',
+const COLOR: Record<Priority, string> = {
+  critical: 'var(--danger)',
+  high: 'var(--mood-pain)',
+  normal: 'var(--brand-ink)',
+  log: 'var(--ok)',
 }
 
 export function PriorityBadge({ priority }: PriorityBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${CLASS[priority]}`}
+      className="mono-label"
+      style={{ color: COLOR[priority] }}
       data-slot="priority-badge"
       data-priority={priority}
     >
+      {priority === 'critical' ? '● ' : ''}
       {LABEL[priority]}
     </span>
   )
