@@ -181,21 +181,21 @@ async function blobToBase64(blob: Blob): Promise<string> {
   return Buffer.from(buf).toString('base64')
 }
 
+function emptyFallback(fallback: string): GeminiAnalysis {
+  return {
+    transcript: fallback || '(silent)',
+    intent: 'UNKNOWN',
+    mood: 'NORMAL',
+    confidence: 0.5,
+    summary: 'ไม่พบใจความเฉพาะ',
+    entities: {},
+  }
+}
+
 export function createRealGeminiAdapter(apiKey: string): GeminiAdapter {
   const genAI = new GoogleGenerativeAI(apiKey)
   const chain = getModelChain()
   let cursor = 0
-
-  function emptyFallback(fallback: string): GeminiAnalysis {
-    return {
-      transcript: fallback || '(silent)',
-      intent: 'UNKNOWN',
-      mood: 'NORMAL',
-      confidence: 0.5,
-      summary: 'ไม่พบใจความเฉพาะ',
-      entities: {},
-    }
-  }
 
   return {
     async analyze(input: GeminiInput): Promise<GeminiAnalysis> {
