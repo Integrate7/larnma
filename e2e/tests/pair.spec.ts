@@ -21,6 +21,7 @@ test.describe('Elder pairing via QR token', () => {
     await seedPrimaryAndElder(base) // reset + seed to avoid stale state
 
     await page.goto('/elder/pair?token=not-a-real-token')
-    await expect(page.getByRole('alert')).toBeVisible({ timeout: 15_000 })
+    // .first() excludes Next.js's __next-route-announcer__ which also has role="alert"
+    await expect(page.getByRole('alert').first()).toBeVisible({ timeout: 15_000 })
   })
 })
