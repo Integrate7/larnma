@@ -1,10 +1,13 @@
 import { __testing, createRealGeminiAdapter } from '../geminiAdapter'
 
 const mockGenerateContent = jest.fn()
+const mockGetGenerativeModel = jest.fn((_cfg: { model: string }) => ({
+  generateContent: mockGenerateContent,
+}))
 
 jest.mock('@google/generative-ai', () => ({
   GoogleGenerativeAI: jest.fn().mockImplementation(() => ({
-    getGenerativeModel: () => ({ generateContent: mockGenerateContent }),
+    getGenerativeModel: (cfg: { model: string }) => mockGetGenerativeModel(cfg),
   })),
 }))
 
@@ -47,9 +50,57 @@ describe('geminiAdapter helpers', () => {
   })
 })
 
+describe('getModelChain', () => {
+  const { getModelChain, DEFAULT_MODEL_CHAIN } = __testing
+  const originalEnv = process.env.GEMINI_MODELS
+
+  afterEach(() => {
+    if (originalEnv === undefined) delete process.env.GEMINI_MODELS
+    else process.env.GEMINI_MODELS = originalEnv
+  })
+
+  it('returns the default chain when GEMINI_MODELS is unset', () => {
+    delete process.env.GEMINI_MODELS
+    expect(getModelChain()).toEqual([...DEFAULT_MODEL_CHAIN])
+  })
+
+  it('parses comma-separated env override', () => {
+    process.env.GEMINI_MODELS = ' a , b ,, c '
+    expect(getModelChain()).toEqual(['a', 'b', 'c'])
+  })
+
+  it('falls back to defaults when env is empty/whitespace', () => {
+    process.env.GEMINI_MODELS = '   '
+    expect(getModelChain()).toEqual([...DEFAULT_MODEL_CHAIN])
+  })
+})
+
+describe('isQuotaExhausted', () => {
+  const { isQuotaExhausted } = __testing
+
+  it('detects http status 429', () => {
+    expect(isQuotaExhausted({ status: 429 })).toBe(true)
+  })
+
+  it('detects RESOURCE_EXHAUSTED and quota in message', () => {
+    expect(isQuotaExhausted(new Error('RESOURCE_EXHAUSTED: quota hit'))).toBe(
+      true,
+    )
+    expect(isQuotaExhausted(new Error('you exceeded your quota'))).toBe(true)
+    expect(isQuotaExhausted('Got 429 from server')).toBe(true)
+  })
+
+  it('returns false for unrelated errors', () => {
+    expect(isQuotaExhausted(new Error('network fail'))).toBe(false)
+    expect(isQuotaExhausted(null)).toBe(false)
+    expect(isQuotaExhausted(undefined)).toBe(false)
+  })
+})
+
 describe('createRealGeminiAdapter', () => {
   beforeEach(() => {
     mockGenerateContent.mockReset()
+    mockGetGenerativeModel.mockClear()
   })
 
   it('sends audio as inlineData and maps JSON response', async () => {
@@ -82,12 +133,14 @@ describe('createRealGeminiAdapter', () => {
   })
 
   it('falls back to NORMAL when generateContent throws', async () => {
+    const err = jest.spyOn(console, 'error').mockImplementation(() => {})
     mockGenerateContent.mockRejectedValueOnce(new Error('boom'))
     const adapter = createRealGeminiAdapter('test-key')
     const r = await adapter.analyze({ hintKeyword: 'hint' })
     expect(r.mood).toBe('NORMAL')
     expect(r.intent).toBe('UNKNOWN')
     expect(r.transcript).toBe('hint')
+    err.mockRestore()
   })
 
   it('sends text-only when no audio', async () => {
@@ -100,5 +153,79 @@ describe('createRealGeminiAdapter', () => {
     expect(parts).toHaveLength(2)
     expect(parts[1]).toHaveProperty('text')
     expect(r.mood).toBe('HAPPY')
+  })
+
+  it('rotates to next model on 429 quota error and sticks to it', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {})
+    const quotaErr = Object.assign(new Error('RESOURCE_EXHAUSTED'), {
+      status: 429,
+    })
+    mockGenerateContent
+      .mockRejectedValueOnce(quotaErr)
+      .mockResolvedValueOnce({
+        response: { text: () => '{"mood":"HUNGRY","summary":"หิว"}' },
+      })
+      .mockResolvedValueOnce({
+        response: { text: () => '{"mood":"HAPPY","summary":"ดี"}' },
+      })
+
+    const adapter = createRealGeminiAdapter('test-key')
+
+    const first = await adapter.analyze({ hintKeyword: 'หิว' })
+    expect(first.mood).toBe('HUNGRY')
+    expect(mockGetGenerativeModel).toHaveBeenCalledTimes(2)
+    expect(mockGetGenerativeModel.mock.calls[0][0].model).toBe(
+      'gemini-flash-latest',
+    )
+    expect(mockGetGenerativeModel.mock.calls[1][0].model).toBe(
+      'gemini-2.5-flash',
+    )
+
+    const second = await adapter.analyze({ hintKeyword: 'ดี' })
+    expect(second.mood).toBe('HAPPY')
+    expect(mockGetGenerativeModel).toHaveBeenCalledTimes(3)
+    expect(mockGetGenerativeModel.mock.calls[2][0].model).toBe(
+      'gemini-2.5-flash',
+    )
+
+    warn.mockRestore()
+  })
+
+  it('returns fallback when all models exhaust quota', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {})
+    const err = jest.spyOn(console, 'error').mockImplementation(() => {})
+    const quotaErr = Object.assign(new Error('quota exceeded'), { status: 429 })
+    mockGenerateContent
+      .mockRejectedValueOnce(quotaErr)
+      .mockRejectedValueOnce(quotaErr)
+      .mockRejectedValueOnce(quotaErr)
+
+    const adapter = createRealGeminiAdapter('test-key')
+    const r = await adapter.analyze({ hintKeyword: 'hint' })
+
+    expect(mockGetGenerativeModel).toHaveBeenCalledTimes(3)
+    expect(r.mood).toBe('NORMAL')
+    expect(r.intent).toBe('UNKNOWN')
+    expect(r.transcript).toBe('hint')
+    expect(err).toHaveBeenCalledWith(
+      '[gemini] all models exhausted; returning fallback',
+    )
+
+    warn.mockRestore()
+    err.mockRestore()
+  })
+
+  it('does not rotate on non-quota errors', async () => {
+    const err = jest.spyOn(console, 'error').mockImplementation(() => {})
+    mockGenerateContent.mockRejectedValueOnce(new Error('network down'))
+
+    const adapter = createRealGeminiAdapter('test-key')
+    const r = await adapter.analyze({ hintKeyword: 'hi' })
+
+    expect(mockGetGenerativeModel).toHaveBeenCalledTimes(1)
+    expect(r.mood).toBe('NORMAL')
+    expect(r.intent).toBe('UNKNOWN')
+
+    err.mockRestore()
   })
 })
