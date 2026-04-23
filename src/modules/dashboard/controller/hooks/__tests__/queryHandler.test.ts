@@ -55,7 +55,7 @@ describe('useDashboardQueryHandler', () => {
   it('sets locations and pairings when all APIs succeed', async () => {
     const eventsBody = { events: [], notifications: [] }
     const locationsBody = { locations: [{ elderId: 'e1', lat: 13.75, lng: 100.5, capturedAt: new Date().toISOString() }] }
-    const pairingsBody = [{ id: 'p1', elderId: 'e1', isPrimary: true }]
+    const pairingsBody = [{ id: 'p1', elderId: 'e1', isPrimary: true, elderName: 'ย่าสมร' }]
     global.fetch = jest.fn()
       .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(eventsBody) } as unknown as Response)
       .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(locationsBody) } as unknown as Response)
@@ -64,6 +64,7 @@ describe('useDashboardQueryHandler', () => {
     await waitFor(() => {
       expect(result.current.gs.state.locations).toHaveLength(1)
       expect(result.current.gs.state.pairings).toHaveLength(1)
+      expect(result.current.gs.state.pairings[0].elderName).toBe('ย่าสมร')
     })
   })
 
