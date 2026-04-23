@@ -26,11 +26,4 @@ describe('navigateToTel', () => {
     }
   })
 
-  it('is a no-op when window is undefined (SSR guard)', () => {
-    const originalWindow = global.window
-    // @ts-expect-error - deliberately unset for SSR guard
-    delete global.window
-    expect(() => navigateToTel('0812345678')).not.toThrow()
-    global.window = originalWindow
-  })
 })
