@@ -1,0 +1,1 @@
+export { ElderFoodPage } from './elderFoodPage'

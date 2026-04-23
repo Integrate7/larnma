@@ -4,6 +4,7 @@ import type { registerFormSchema } from './schema'
 
 export type RegisterStep =
   | 'welcome'
+  | 'choice'
   | 'phone'
   | 'otp'
   | 'caregiver'
@@ -17,6 +18,7 @@ export type RegisterStep =
 
 export const REGISTER_STEPS: RegisterStep[] = [
   'welcome',
+  'choice',
   'phone',
   'otp',
   'caregiver',
@@ -46,6 +48,7 @@ export type RegisterGlobalState = {
 export type RegisterHandler = {
   next: () => Promise<void> | void
   back: () => void
+  onGoogle: () => void
   sendOtp: () => Promise<void>
   verifyOtp: () => Promise<void>
   submitCaregiver: () => Promise<void>

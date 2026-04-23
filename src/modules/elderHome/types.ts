@@ -1,5 +1,5 @@
 import type { MicButtonState } from '@/components/molecule/micButton'
-import type { Mood, Intent } from '@/shared/types'
+import type { Intent, Mood } from '@/shared/types'
 
 export type { MicButtonState }
 
@@ -9,6 +9,7 @@ export type AudioUploadResult = {
   mood: Mood
   intent: Intent
   summary: string
+  advice?: string
 }
 
 export type ElderHomeGlobalState = {

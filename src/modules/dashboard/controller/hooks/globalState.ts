@@ -16,6 +16,7 @@ export function useDashboardGlobalState() {
   const [error, setError] = useState<string | null>(null)
   const [pairings, setPairings] = useState<PairingInfo[]>([])
   const [locations, setLocations] = useState<ElderLocation[]>([])
+  const [orderedEventIds, setOrderedEventIds] = useState<string[]>([])
 
   const moodCounts = useMemo<Record<Mood, number>>(() => {
     const out = Object.fromEntries(MOODS.map((m) => [m, 0])) as Record<
@@ -34,6 +35,7 @@ export function useDashboardGlobalState() {
     error,
     pairings,
     locations,
+    orderedEventIds,
   }
 
   const prependEvent = (e: AudioEvent) =>
@@ -60,6 +62,9 @@ export function useDashboardGlobalState() {
 
   void ({} as Priority) // keep import alive when tree-shaken
 
+  const addOrderedEventId = (eventId: string) =>
+    setOrderedEventIds((prev) => (prev.includes(eventId) ? prev : [...prev, eventId]))
+
   return {
     state,
     setConnecting,
@@ -70,5 +75,6 @@ export function useDashboardGlobalState() {
     prependNotification,
     updateNotification,
     replaceAll,
+    addOrderedEventId,
   }
 }

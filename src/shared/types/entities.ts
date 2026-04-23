@@ -7,6 +7,8 @@ export type User = {
   id: string
   role: Role
   phone: string
+  email?: string
+  googleId?: string
   name: string
   profilePicUrl?: string
   createdAt: string

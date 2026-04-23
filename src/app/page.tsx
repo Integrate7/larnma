@@ -1,8 +1,14 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { Button } from '@/components/atom/button'
+import { getServerAuth } from '@/services/guards/serverAuth'
 
 export default async function HomePage() {
+  const auth = await getServerAuth()
+  if (auth?.role === 'caregiver') redirect('/dashboard')
+  if (auth?.role === 'elder') redirect('/elder')
+
   const t = await getTranslations()
 
   return (
@@ -14,9 +20,12 @@ export default async function HomePage() {
           <Link href="/register">{t('welcome.startButton')}</Link>
         </Button>
         <Button asChild size="xl" variant="outline">
-          <Link href="/elder">{t('elder.tapToSpeak')}</Link>
+          <Link href="/elder/pair">{t('welcome.scanQrButton')}</Link>
         </Button>
       </div>
+      <p className="max-w-sm text-sm text-muted-foreground">
+        {t('welcome.elderHint')}
+      </p>
     </main>
   )
 }

@@ -16,9 +16,11 @@ export type DashboardGlobalState = {
   error: string | null
   pairings: PairingInfo[]
   locations: ElderLocation[]
+  orderedEventIds: string[]
 }
 
 export type DashboardHandler = {
   ack: (notificationId: string) => Promise<void>
+  order: (notification: Notification, events: AudioEvent[]) => Promise<void>
   reload: () => Promise<void>
 }

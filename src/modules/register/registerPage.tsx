@@ -6,19 +6,20 @@ import { REGISTER_STEPS } from './types'
 import { useRegisterController } from './controller/controller'
 import {
   CaregiverStep,
+  WelcomeStep,
+  ChoiceStep,
+  PhoneStep,
   ConsentStep,
   ElderBasicStep,
   ElderEmergencyStep,
   ElderHealthStep,
   ElderOptionalStep,
   OtpStep,
-  PhoneStep,
   QrStep,
   ReviewStep,
-  WelcomeStep,
-} from './views/stepViews'
+  } from './views/stepViews'
 
-export function RegisterPage() {
+  export function RegisterPage() {
   const { form, state, handler } = useRegisterController()
   const stepIndex = REGISTER_STEPS.indexOf(state.step) + 1
 
@@ -50,7 +51,11 @@ export function RegisterPage() {
       {state.step === 'welcome' ? (
         <WelcomeStep onNext={() => handler.next()} />
       ) : null}
+      {state.step === 'choice' ? (
+        <ChoiceStep onNext={() => handler.next()} onGoogle={() => handler.onGoogle()} />
+      ) : null}
       {state.step === 'phone' ? <PhoneStep {...props} /> : null}
+
       {state.step === 'otp' ? (
         <OtpStep {...props} phone={form.getValues('phone')} />
       ) : null}

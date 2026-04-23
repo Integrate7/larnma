@@ -1,16 +1,15 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
+import { publishTo } from '@/services/eventBus'
 import { getGeminiAdapter } from '@/services/gemini'
 import { requireDevice } from '@/services/guards'
-import { getRepository } from '@/services/repository'
 import { fanOutEvent } from '@/services/notifications'
-import { publishTo } from '@/services/eventBus'
+import { getRepository } from '@/services/repository'
 
 export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
   const auth = await requireDevice(req)
-  if (!auth.ok)
-    return NextResponse.json({ error: auth.error }, { status: 401 })
+  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: 401 })
   if (auth.role !== 'elder')
     return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 })
 
@@ -55,9 +54,7 @@ export async function POST(req: NextRequest) {
   // Fan-out notifications + publish to SSE bus
   const notis = fanOutEvent(event)
   const caregiverIds = Array.from(
-    new Set(
-      repo.listPairingsByElder(auth.elderId).map((p) => p.caregiverId),
-    ),
+    new Set(repo.listPairingsByElder(auth.elderId).map((p) => p.caregiverId)),
   )
   for (const cid of caregiverIds) {
     publishTo(cid, { kind: 'audio', event })
@@ -72,5 +69,6 @@ export async function POST(req: NextRequest) {
     mood: analysis.mood,
     intent: analysis.intent,
     summary: analysis.summary,
+    advice: analysis.advice,
   })
 }

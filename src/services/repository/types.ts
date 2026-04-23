@@ -19,6 +19,8 @@ export type IRepository = {
   createUser: (user: Omit<User, 'id' | 'createdAt'>) => User
   getUserById: (id: string) => User | undefined
   getUserByPhone: (phone: string) => User | undefined
+  getUserByEmail: (email: string) => User | undefined
+  getUserByGoogleId: (googleId: string) => User | undefined
   updateUser: (id: string, patch: Partial<User>) => User | undefined
 
   // Elder profiles
