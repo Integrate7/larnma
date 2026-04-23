@@ -11,14 +11,20 @@ const LABEL_DEFAULT: Record<MicButtonState, string> = {
   error: 'ลองใหม่',
 }
 
-const BAR_HEIGHTS = ['50%', '90%', '30%', '80%', '60%']
+const BAR_HEIGHTS = [
+  { id: 'a', h: '50%' },
+  { id: 'b', h: '90%' },
+  { id: 'c', h: '30%' },
+  { id: 'd', h: '80%' },
+  { id: 'e', h: '60%' },
+]
 
 function ListeningBars() {
   return (
     <div className="flex h-9 items-end gap-1">
-      {BAR_HEIGHTS.map((h, i) => (
+      {BAR_HEIGHTS.map(({ id, h }, i) => (
         <span
-          key={`bar-${h}-${i}`}
+          key={id}
           className="w-1 rounded-sm bg-white animate-pulse"
           style={{ height: h, animationDelay: `${i * 80}ms` }}
         />
