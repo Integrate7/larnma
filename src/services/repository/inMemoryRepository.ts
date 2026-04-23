@@ -18,6 +18,8 @@ import type { IRepository } from './types'
 type State = {
   users: Map<string, User>
   userByPhone: Map<string, string>
+  userByEmail: Map<string, string>
+  userByGoogleId: Map<string, string>
   elderProfiles: Map<string, ElderProfile>
   otpChallenges: Map<string, OtpChallenge>
   sessions: Map<string, Session>
@@ -33,6 +35,8 @@ type State = {
 const makeState = (): State => ({
   users: new Map(),
   userByPhone: new Map(),
+  userByEmail: new Map(),
+  userByGoogleId: new Map(),
   elderProfiles: new Map(),
   otpChallenges: new Map(),
   sessions: new Map(),
@@ -60,6 +64,8 @@ export function createInMemoryRepository(): IRepository {
       }
       state.users.set(user.id, user)
       state.userByPhone.set(user.phone, user.id)
+      if (user.email) state.userByEmail.set(user.email, user.id)
+      if (user.googleId) state.userByGoogleId.set(user.googleId, user.id)
       return user
     },
     getUserById(id) {
@@ -67,6 +73,14 @@ export function createInMemoryRepository(): IRepository {
     },
     getUserByPhone(phone) {
       const id = state.userByPhone.get(phone)
+      return id ? state.users.get(id) : undefined
+    },
+    getUserByEmail(email) {
+      const id = state.userByEmail.get(email)
+      return id ? state.users.get(id) : undefined
+    },
+    getUserByGoogleId(googleId) {
+      const id = state.userByGoogleId.get(googleId)
       return id ? state.users.get(id) : undefined
     },
     updateUser(id, patch) {
@@ -77,6 +91,14 @@ export function createInMemoryRepository(): IRepository {
       if (patch.phone && patch.phone !== existing.phone) {
         state.userByPhone.delete(existing.phone)
         state.userByPhone.set(merged.phone, id)
+      }
+      if (patch.email && patch.email !== existing.email) {
+        if (existing.email) state.userByEmail.delete(existing.email)
+        state.userByEmail.set(merged.email!, id)
+      }
+      if (patch.googleId && patch.googleId !== existing.googleId) {
+        if (existing.googleId) state.userByGoogleId.delete(existing.googleId)
+        state.userByGoogleId.set(merged.googleId!, id)
       }
       return merged
     },

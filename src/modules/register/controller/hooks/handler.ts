@@ -214,9 +214,16 @@ export function useRegisterHandler(args: {
     gs.setPairingToken(res.data.token)
   }
 
+  const onGoogle = () => {
+    // In a real app, this would redirect to Google OAuth
+    // For this prototype, we'll redirect to our mock endpoint
+    window.location.href = '/api/auth/google'
+  }
+
   const next = async () => {
     const step = gs.state.step
-    if (step === 'welcome') gs.goto('phone')
+    if (step === 'welcome') gs.goto('choice')
+    else if (step === 'choice') gs.goto('phone')
     else if (step === 'phone') await sendOtp()
     else if (step === 'otp') await verifyOtp()
     else if (step === 'caregiver') await submitCaregiver()
@@ -243,6 +250,7 @@ export function useRegisterHandler(args: {
   return {
     next,
     back: gs.back,
+    onGoogle,
     sendOtp,
     verifyOtp,
     submitCaregiver,
