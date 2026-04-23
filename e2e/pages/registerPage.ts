@@ -19,11 +19,12 @@ export class RegisterPage {
   }
 
   async fillOtp(code: string) {
-    // OTP input is 6 inputs — paste the full value into the first one
-    const first = this.page.getByRole('textbox', { name: 'digit 1' })
-    await first.focus()
-    await first.press('Control+A')
-    await this.page.keyboard.type(code)
+    // Fill each digit individually so existing values are cleared first.
+    // keyboard.type() can't overwrite maxLength=1 inputs that are already filled,
+    // but .fill() selects-all before typing, so it works for retry scenarios.
+    for (let i = 0; i < code.length; i++) {
+      await this.page.getByRole('textbox', { name: `digit ${i + 1}` }).fill(code[i])
+    }
   }
 
   async verifyOtp() {

@@ -40,7 +40,7 @@ test.describe('Secondary caregiver invite flow', () => {
     await sPage.getByTestId('invite-go-dashboard').click()
     await sPage.waitForURL('**/dashboard')
     await expect(
-      sPage.getByRole('heading', { name: 'แดชบอร์ด' }),
+      sPage.getByRole('heading', { name: 'คุณแม่วันนี้' }),
     ).toBeVisible()
   })
 })
