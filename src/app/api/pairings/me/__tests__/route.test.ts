@@ -61,17 +61,37 @@ describe('GET /api/pairings/me', () => {
     expect(body).toEqual([])
   })
 
-  it('returns pairings for caregiver', async () => {
-    const { cookie } = await bootCaregiver()
+  it('returns pairings for caregiver, including elderName', async () => {
+    const { cookie, elderId } = await bootCaregiver()
     const r = await GET(req(cookie))
     expect(r.status).toBe(200)
     const body = await r.json()
     expect(Array.isArray(body)).toBe(true)
     expect(body).toHaveLength(1)
-    expect(body[0]).toHaveProperty('id')
-    expect(body[0]).toHaveProperty('elderId')
-    expect(body[0]).toHaveProperty('isPrimary')
-    expect(body[0].isPrimary).toBe(true)
+    expect(body[0]).toMatchObject({
+      elderId,
+      isPrimary: true,
+      elderName: 'ย่า',
+    })
+    expect(typeof body[0].id).toBe('string')
+  })
+
+  it('falls back to empty elderName when the elder user record is missing', async () => {
+    const repo = getRepository()
+    const cg = repo.createUser({ role: 'caregiver', phone: '0811', name: 'CG' })
+    repo.createPairing({
+      elderId: 'ghost-elder-id',
+      caregiverId: cg.id,
+      isPrimary: true,
+      permissions: DEFAULT_PRIMARY_PERMISSIONS,
+    })
+    const s = await issueCaregiverSession({ userId: cg.id })
+    const cookie = `${COOKIES.access}=${s.accessToken}`
+    const r = await GET(req(cookie))
+    expect(r.status).toBe(200)
+    const body = await r.json()
+    expect(body).toHaveLength(1)
+    expect(body[0].elderName).toBe('')
   })
 
   it('returns multiple pairings', async () => {
