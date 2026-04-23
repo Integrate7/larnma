@@ -48,20 +48,20 @@ Read docs/agents/context/02-controller-view-pattern.md    # Primary pattern
 
 | If the task involves... | Also read |
 |---|---|
-| API / data fetching | `context/03-data-layer.md` |
-| Zustand store | `context/04-state-management.md` |
-| Node system / workflow editor | `context/05-node-system.md` |
-| Auth / permissions | `context/06-auth-and-rbac.md` |
-| Testing (unit / E2E) | `context/07-testing.md` |
-| Decision table | `context/09-decision-table.md` |
-| Creating new page/component/node | `context/08-common-tasks.md` |
+| API / data fetching / new route handler | `context/03-data-layer.md` |
+| Module state (`globalState`, forms, SSE consumption) | `context/04-state-management.md` |
+| Auth / cookies / JWT / permissions | `context/05-auth-and-sessions.md` |
+| Pluggable external boundaries (Gemini, repository, menu, eventBus, orderLifecycle, notifications, OTP) | `context/06-integrations.md` |
+| Tests (unit / E2E / coverage gate / test-seed) | `context/07-testing.md` |
+| i18n (Thai-first, `next-intl`, new copy keys) | `context/08-i18n-thai-first.md` |
+| New elder screen or new caregiver screen / routing | `context/09-elder-caregiver-surfaces.md` |
 | Starting an implementation task (`/implement`) | `skills/implement.md` |
 | Running the pre-commit quality gate (`/verify`) | `skills/verify.md` |
 | Reviewing your own branch (`/self-review`) | `skills/self-review.md` |
 | Reviewing a teammate's PR (`/review-pr`) | `skills/review-pr.md` |
 | Authoring a commit (`/commit`) | `skills/commit.md` |
 | Shipping / opening a PR (`/ship`) | `skills/ship.md` |
-| Specs / plans | `docs/mvp/`, `docs/plans/`, `docs/superpowers/` |
+| Product scope / specs / plans | `docs/mvp/mvp.md`, `docs/plans/` |
 
 ### 2.3 Read the relevant source code
 
@@ -105,22 +105,23 @@ No production code edits until the user approves the plan. If they ask for chang
 
 ### 4.1 Critical Rules (every time)
 
-These mirror rules A1–A12 in `skills/self-review.md`. `/ship` will block if any of these are violated.
+These mirror rules A1–A12 in `CLAUDE.md` / `skills/self-review.md`. `/ship` will block if any of these are violated.
 
 ```
-[ ] Always use @/components/ — never use native HTML (<button>, <input>, <dialog>, <form>)
-[ ] No direct @radix-ui/* imports in src/modules/ — wrap via @/components/
-[ ] Follow Controller-View pattern for all feature modules
-[ ] API calls go through src/services/adapter/ only
-[ ] Use type, not interface
-[ ] types.ts is the single source of truth — never define types inline in hooks
-[ ] Views receive flat props only — no controller/store awareness
-[ ] Handler props use Pick<GlobalState, ...>
-[ ] Server Actions return ActionResult<T>
-[ ] Never execute user expressions in the browser
-[ ] If-node handles use 'true'/'false', NOT 'success'/'failure'
-[ ] Never call lock workflow API on the workflow detail page
-[ ] Switch-node handles computed from cases, not hardcoded
+[ ] A1  Always use @/components/ — never native HTML (<button>, <input>, <dialog>, <form>)
+[ ] A2  No direct @radix-ui/* imports in src/modules/ — wrap via @/components/
+[ ] A3  Follow the Controller-View pattern for all feature modules
+[ ] A4  Client code uses fetcher() from services/adapter; server code uses getRepository() — never raw fetch/axios
+[ ] A5  Use type, not interface
+[ ] A6  types.ts is the single source of truth — never define types inline in hooks
+[ ] A7  Views receive flat props only — no controller/store awareness
+[ ] A8  Handler props use Pick<GlobalState, ...>
+[ ] A9  Server Actions and API JSON responses use ActionResult<T>
+[ ] A10 Never execute user expressions in the browser
+[ ] A11 Use @/components/atom/button + variant/size — never reinvent
+[ ] A12 No biome-ignore comments — fix the code, not the rule
+[ ]     Never hard-code Thai strings — use next-intl keys from messages/th.json
+[ ]     Route handlers run requireCaregiver / requireDevice before any repo call
 ```
 
 ### 4.2 Invoke `/implement` to start
@@ -218,47 +219,36 @@ Commit `<type>` values: `feat`, `fix`, `enhance`, `refactor`, `chore`, `docs`, `
 
 ## Quick Reference — Choose Workflow by Task
 
-### New Page
+### New Page (elder or caregiver)
 
 ```
-1. Read context/01, 02, 08
-2. Create route in app/
-3. Create module in modules/ following Controller-View pattern
-4. Add route permissions in config/
-5. Add sidebar entry (if needed)
-6. Write unit tests (coverage ≥ 80%)
+1. Read context/01, 02, 09
+2. Decide surface (elder vs caregiver) and add app/<surface>/<slug>/page.tsx (one-line module mount)
+3. Create module in src/modules/<name>/ following Controller-View
+4. Wire guard: getServerAuth() in the page.tsx if surface-gated; requireCaregiver/requireDevice in any new API route
+5. Add copy keys to messages/th.json AND messages/en.json (keep parity)
+6. Write unit tests (coverage ≥ 80%) + E2E spec if the flow is user-visible
 ```
 
 ### New API Endpoint
 
 ```
-1. Read context/03
-2. Add config in services/adapter/config.ts
-3. Create Zod schema
-4. Create Query/Mutation class
-5. Export from index
-6. Use in hook / server action
-7. Write unit tests
-```
-
-### New Node Type
-
-```
-1. Read context/05, 04
-2. Add to nodeRegistry
-3. Create data type
-4. Create config component (Controller-View)
-5. Register in switch
-6. Add validation
-7. Write unit tests
+1. Read context/03, 05
+2. Add (or reuse) Zod schema under src/services/adapter/schemas/
+3. Create src/app/api/<path>/route.ts — export const runtime = 'nodejs'
+4. Run requireCaregiver or requireDevice first; then checkPermission if the action is sensitive
+5. Do work via getRepository(); publish to eventBus if other clients should re-render
+6. Call it from the relevant module via fetcher(url, schema) — never raw fetch
+7. Write unit tests for the handler (auth-missing + happy + failure paths)
 ```
 
 ### New Component
 
 ```
-1. Read context/01, 08
-2. Create in src/components/atom/myComponent/
-3. Files: myComponent.tsx, types.ts, index.ts
+1. Read context/01
+2. Atom? → src/components/atom/<name>/ (may import @radix-ui/*) with variant/size via CVA
+   Molecule? → src/components/molecule/<name>/ (composes atoms only)
+3. Files: <name>.tsx, types.ts, index.ts — types in types.ts, never inline
 4. No native HTML — wrap Radix if needed
 5. Write unit tests
 ```
@@ -266,11 +256,22 @@ Commit `<type>` values: `feat`, `fix`, `enhance`, `refactor`, `chore`, `docs`, `
 ### New Dialog
 
 ```
-1. Read context/02, 08
-2. Dialog state lives in parent's globalState
-3. If it has a form → use formHandler pattern
-4. Form data lives in dialog's formHandler (not parent)
-5. Write unit tests
+1. Read context/02
+2. Open/close state lives in the parent's globalState.ts
+3. If the dialog has a form → add formHandler.ts INSIDE the dialog's nested controller; Zod schema in schema.ts
+4. Handler reads form via getValues/trigger — never owns form state
+5. Write unit tests for globalState, formHandler, handler
+```
+
+### New External Integration
+
+```
+1. Read context/06
+2. Add an interface in src/services/<name>/types.ts
+3. Ship a mock implementation FIRST (createMock<Name>Adapter) — pass all tests against the mock
+4. Add a factory: getXAdapter() returns mock by default, real if env var set
+5. Expose __setXAdapter() for tests
+6. Only then wire the real implementation (createReal<Name>Adapter)
 ```
 
 ---
@@ -280,16 +281,19 @@ Commit `<type>` values: `feat`, `fix`, `enhance`, `refactor`, `chore`, `docs`, `
 | Don't | Do Instead |
 |-------|------------|
 | Use `<button>`, `<input>` directly | Use `@/components/atom/` |
-| Import from `@radix-ui/` in modules | Import from `@/components/atom/` |
-| Call API directly from components | Go through `services/adapter/` |
+| Import from `@radix-ui/` in `src/modules/` | Import from `@/components/atom/` |
+| Call `fetch` / axios from a component or hook | Use `fetcher(url, schema)` from `services/adapter/fetcher.ts` |
+| Read/write domain state inside a module-level `Map` | Use `getRepository()` |
 | Use `interface` | Use `type` |
 | Define types in hook files | Define in `types.ts` |
 | Let views know about store / controller | Views receive flat props only |
-| Use ESLint / Prettier | Use Biome |
-| Use `.fill()` on Monaco | Use `keyboard.type()` |
-| Use `sleep()` in tests | Use `waitFor()` |
+| Hard-code Thai (or English) copy in JSX | Use `useTranslations()` keys from `messages/th.json` |
+| Call `fetch` inside an API route handler to hit another internal route | Call the service directly (`getRepository()`, `fanOutEvent`, …) |
+| Skip `requireCaregiver` / `requireDevice` because "the page redirects" | Every `/api/*` handler runs a guard first |
+| Use ESLint / Prettier | Use Biome (rule A12 forbids `biome-ignore`) |
+| Use `setTimeout` / `sleep()` in tests | Use Playwright `waitFor()` or Testing Library `await find…` |
+| Add a `middleware.ts` to enforce auth | Enforce per-route via services/guards |
+| Open a modal to carry form state across screens | Put form state in the page's `formHandler` and navigate |
 | Add features that weren't requested | Do only what was asked |
-| Hardcode Switch node handles | Compute from cases |
-| Call lock workflow API on detail page | Never call on detail page |
 | Merge your own PR | Let a human merge |
 | Skip a `/ship` gate with `--no-verify` | Fix the root cause in a new commit |

@@ -1,226 +1,291 @@
 # Codebase Overview (Agent Reference)
 
+Larnma — หลานม่า — Thai-first, voice-first elder-care MVP. Two surfaces (caregiver + elder) in a single Next.js app, with pluggable external integrations so the MVP runs with zero real infra.
+
 ## Setup
 
 ### Prerequisites
-- Node.js >= 20.9.0, npm >= 9.0.0, Git >= 2.30.0
+- Node.js ≥ 20.9, npm ≥ 9, Git ≥ 2.30
 
 ### Quick Start
 ```bash
 git clone <repository-url>
-cd frontend-workflow-builder-service
+cd larnma
 npm install
-cp .env.example .env.local
-npm run dev    # → http://localhost:3000
+cp .env.example .env.local   # if present — MVP runs without env vars by default
+npm run dev                  # → http://localhost:3000
 ```
 
-### Environment Variables
+### Environment Variables (all optional — mocks apply when missing)
 ```env
-NEXT_PUBLIC_APP_ENV=development
+GEMINI_API_KEY=              # if set, the real GeminiAdapter is used; otherwise mock
+JWT_SECRET=                  # session signing secret (dev default applied if missing)
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_WORKFLOW_ENGINE_API_URL=http://localhost:8000/
 ```
 
 ### Commands
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Dev server (Turbopack) |
-| `npm run build` | Production build |
-| `npm run lint` | Biome linter + TypeScript check |
-| `npm run lint:fix` | Auto-fix lint issues |
-| `npm run type-check` | TypeScript check only |
-| `npm test` | Unit tests (Jest) |
-| `npm run test:e2e` | E2E tests (Playwright, headless) |
-| `npm run test:e2e:ui` | E2E with Playwright UI |
-| `npm run docker:up` | Start Docker containers |
+| `npm run dev` | Dev server (Next 16 + Turbopack) on `:3000` |
+| `npm run build` | Production build (standalone output) |
+| `npm run start` | Production server on `:8080` |
+| `npm run lint` | Biome lint + `tsc --noEmit` |
+| `npm run lint:fix` | Biome auto-fix |
+| `npm test` | Jest unit tests |
+| `npm run test:coverage` | Jest with coverage gate (≥ 80%) |
+| `npm run test:e2e` | Playwright E2E (auto-starts dev server on `:3100`) |
+| `npm run test:e2e:ui` | Playwright interactive UI |
 
 ---
 
 ## Tech Stack (exact versions matter)
 
 | Technology | Version | Notes |
-|-----------|---------|-------|
-| Next.js | 16.1.6 | App Router, Turbopack dev |
-| React | 19 | Server Components supported |
-| TypeScript | 5.7 | Strict mode, no implicit `any` |
-| @xyflow/react | 12 | Workflow canvas |
-| Zustand | 5 | With Immer middleware |
-| TanStack Query | 5 | Via custom hooks |
-| Monaco Editor | 4 | Custom completion providers |
-| Tailwind CSS | 4 | With shadcn/ui + Radix UI |
-| Biome | — | Linter + formatter (NOT ESLint) |
-| Playwright | — | E2E testing |
-| Zod | 4 | Schema validation |
-| Ajv | — | JSON Schema validation |
+|------------|---------|-------|
+| Next.js | 16.1.6 | App Router, Turbopack dev & build |
+| React | 19.2 | Server Components + Client Components |
+| TypeScript | 5.7 | Strict mode, `@/*` → `src/*` |
+| next-intl | 4.8 | Thai-first i18n, default locale `th`, TZ `Asia/Bangkok` |
+| Zod | 4.x | Request / response validation in `fetcher` and API routes |
+| TanStack Query | 5.x | Query client in `Providers` (used sparingly; most state is local controller state) |
+| Zustand | 5.x | Available but modules currently use `useState`-based controllers |
+| react-hook-form | 7.x + `@hookform/resolvers` | Multi-step forms (register, elderProfile edit) |
+| jose | 5.x | JWT sign/verify for cookie sessions |
+| Leaflet + react-leaflet | 1.9 / 5 | Caregiver map view (`ElderMap` molecule) |
+| `@zxing/browser` + `qrcode` | — | QR scanner / QR display for pairing |
+| `@google/generative-ai` | 0.24 | Real Gemini adapter (mock used by default) |
+| sonner | 2.x | Toast notifications |
+| Tailwind CSS | 4.1 | Utility CSS + CSS variables in `styles/globals.css` |
+| Biome | 2.3 | Linter + formatter (NOT ESLint / Prettier) |
+| Jest 30 + Testing Library | — | Unit tests, jsdom env |
+| Playwright | 1.57 | E2E tests under `e2e/` |
 
-## Architecture Layers
+---
+
+## Architecture — Two Surfaces, One App
 
 ```
-Browser
-├── React Components (shadcn/ui + Radix)
-├── Workflow Canvas (@xyflow/react)
-├── Code Editor (Monaco)
-├── State Management (Zustand + Immer, 8 slices)
-└── API Layer (TanStack Query + Adapter)
-      ↓
-API Gateway → Workflow API (Backend) + Auth Service (OAuth)
+Browser (elder device)            Browser (caregiver device)
+   │                                 │
+   ▼                                 ▼
+src/app/elder/*                  src/app/caregiver/*  +  src/app/dashboard/*
+(large targets, voice-first,     (lists, maps, feeds,
+ device-bound cookie,             OTP + JWT cookies)
+ no login screen)
+   │                                 │
+   └──────────────┬──────────────────┘
+                  ▼
+         src/modules/* (Controller-View)
+                  ▼
+         src/services/*
+            adapter/   — fetch wrapper + Zod schemas + queryClient
+            auth/      — issue/rotate caregiver + device sessions
+            jwt/       — sign/verify, cookie helpers
+            guards/    — requireCaregiver / requireDevice / checkPermission
+            otp/       — mock SMS OTP (phone ↔ code)
+            gemini/    — GeminiAdapter interface (mock or real)
+            repository/— IRepository interface (in-memory default)
+            eventBus/  — in-process pub/sub powering SSE
+            menu/      — food catalog + allergy-aware recommender
+            notifications/ — fan-out + escalation
+            orderLifecycle/ — auto-advance order status (mock fulfilment)
+                  ▼
+           src/app/api/**/route.ts
+         (read/write via repository,
+          publish to eventBus, stream SSE)
 ```
+
+### Push: SSE, not WebSocket
+- Caregiver: `GET /api/events/stream` → `Content-Type: text/event-stream`, subscribes via `eventBus.subscribe(caregiverId, …)`
+- Elder:    `GET /api/elder/events/stream` → subscribes via `eventBus.subscribeElder(elderId, …)`
+- Heartbeat every 15 s. The client layer is just `new EventSource(url)` with JSON payloads.
+
+---
 
 ## Directory Map
 
 ```
 src/
-├── app/                    # Next.js App Router pages
-│   ├── workflows/          # /workflows/[name] pages
-│   ├── decision-tables/    # /decision-tables/[name] pages
-│   ├── releases/           # /releases, /releases/[id] pages
-│   ├── deployment/         # /deployment page (import, history)
-│   ├── activity/           # Execution history pages
-│   ├── auth/               # Login, callback, logout
-│   └── config/             # App & DB configuration
-├── modules/                # Feature modules (business logic) ← MOST WORK HAPPENS HERE
-│   ├── workflow/           # Main workflow editor (largest module)
-│   ├── workflows/          # Workflow list/management
-│   ├── releases/           # Release management
-│   ├── deployment/         # Deployment (import, rollback, history)
-│   ├── decision/           # Decision table editor
-│   ├── config/             # Configuration UI
-│   ├── activity/           # Execution viewer
-│   └── auth/               # Auth components
-├── services/               # API layer ← ALL API CALLS GO THROUGH HERE
-│   ├── adapter/            # Centralized API adapters
-│   │   ├── config.ts       # Endpoint configs
-│   │   ├── links/          # HTTP client (fetch wrapper)
-│   │   ├── queries/        # GET operations
-│   │   └── mutations/      # POST/PUT/DELETE operations
-│   ├── useQuery/           # Auto-fetch on mount hook
-│   ├── useLazyQuery/       # Manual trigger fetch hook
-│   └── useMutation/        # Mutation hook
-├── stores/                 # Zustand stores
-│   ├── workflow/           # 8-slice workflow store (graph, selection, runtime, history, etc.)
-│   ├── config/             # App config + DB connections
-│   ├── sidebar/            # Sidebar collapse state
-│   ├── toast/              # Toast notifications
-│   ├── dialog/             # Dialog state
-│   └── user/               # User/auth state
-├── components/             # Shared UI components ← ALWAYS USE THESE, NEVER NATIVE HTML
-│   ├── atom/               # Atomic wrappers (Button, Input, Dialog, etc.)
-│   └── molecules/          # Composed components (AppLayout, Sidebar, Toast, etc.)
-├── shared/                 # Shared types, helpers, hooks
-│   ├── types/adapter/      # API type definitions
-│   ├── helpers/            # Utility functions
-│   └── hooks/              # useAuth, useTokenRefresh
-├── providers/              # React context providers
-├── config/                 # Route permissions, constants
-└── hooks/                  # Global hooks
+├── app/                       # Next.js App Router (plain folders — no route groups)
+│   ├── page.tsx               # Root — redirects based on session (caregiver → /dashboard, elder → /elder)
+│   ├── layout.tsx             # Root layout: fonts + NextIntlClientProvider + Providers
+│   ├── auth/callback/         # Google OAuth return
+│   ├── register/              # Caregiver OTP + Google registration
+│   ├── invite/[token]/        # Secondary caregiver accepts invite
+│   ├── dashboard/             # Caregiver main screen
+│   ├── caregiver/elders/[id]/ # Elder detail + /edit
+│   ├── elder/                 # Elder surface (+ /food, /me, /pair)
+│   ├── privacy/               # Static privacy page
+│   └── api/                   # Route handlers (see "API Routes" below)
+├── modules/                   # Feature modules — Controller-View
+│   ├── dashboard/             # Caregiver dashboard
+│   ├── elderHome/             # Elder mic-first home
+│   ├── elderFood/             # Elder food order history + request
+│   ├── elderMe/               # Elder read-only self profile
+│   ├── elderProfile/          # Caregiver view/edit of an elder profile
+│   ├── inviteLanding/         # Accept caregiver invite
+│   ├── pair/                  # Elder scans QR, consumes pairing token
+│   └── register/              # Caregiver multi-step signup
+├── services/                  # All side effects live here (see "Services" below)
+├── components/
+│   ├── atom/                  # Radix-wrapped primitives — only place @radix-ui/* may be imported
+│   └── molecule/              # Composed domain components (MicButton, ElderMap, QrScanner, …)
+├── shared/
+│   ├── helpers/               # cn (classnames), deviceFingerprint
+│   └── types/                 # Domain entities + ActionResult + Mood/Intent/Role/Permission
+├── providers/Providers.tsx    # Client: QueryClientProvider + Sonner Toaster
+├── styles/globals.css         # Tailwind base + design tokens (CSS vars: --ink, --brand-ink, --rule, --danger, …)
+└── i18n.ts                    # next-intl request config (locales ['th','en'], default 'th')
+
+messages/
+├── th.json                    # Primary — use these keys
+└── en.json                    # Parity translations
 ```
+
+No `middleware.ts` at project root — auth is enforced per-route via `guards` (see `context/05-auth-and-sessions.md`).
+
+---
+
+## API Routes (`src/app/api/**/route.ts`)
+
+All handlers are Node runtime; most take `NextRequest` and return `NextResponse.json(...)`.
+
+| Path | Methods | Purpose | Guard |
+|---|---|---|---|
+| `/api/audio` | POST | Upload elder audio → Gemini analyse → create `AudioEvent` → fan-out notifications | `requireDevice` |
+| `/api/events` | GET | Caregiver's 50 most recent events + notifications | `requireCaregiver` |
+| `/api/events/stream` | GET | SSE push of `DashboardEvent` (audio / notification / ack / order / point / heartbeat) | `requireCaregiver` |
+| `/api/elder/events/stream` | GET | SSE push of `ElderEvent` (order_delivered / heartbeat) | `requireDevice` |
+| `/api/elder/me` | GET | Current elder's profile | `requireDevice` |
+| `/api/elder/location` | POST | Elder submits geolocation | `requireDevice` |
+| `/api/elder/food/menus` | GET | Personalised menu suggestions (allergy + condition aware) | `requireDevice` |
+| `/api/elder/food/request` | POST | Elder-initiated food request (before caregiver confirms) | `requireDevice` |
+| `/api/auth/google` | GET | Start Google OAuth | — |
+| `/api/auth/google/callback` | GET | Google OAuth return → issue caregiver session | — |
+| `/api/auth/otp/send` | POST | Send mock SMS OTP | `checkOriginAllowed` |
+| `/api/auth/otp/verify` | POST | Verify OTP → issue caregiver session | `checkOriginAllowed` |
+| `/api/auth/logout` | POST | Clear cookies, revoke session | `requireCaregiver` |
+| `/api/auth/refresh` | POST | Rotate access/refresh pair | (refresh cookie) |
+| `/api/caregivers/me` | GET | Caregiver profile | `requireCaregiver` |
+| `/api/elders` | GET | Paired elders | `requireCaregiver` |
+| `/api/elders/[id]` | GET / PATCH | Elder detail / edit profile | `requireCaregiver` + `checkPermission('edit_elder_profile')` on PATCH |
+| `/api/elders/location` | GET | Latest location for all paired elders | `requireCaregiver` |
+| `/api/menus` | GET | Full `MENU_CATALOG` | — |
+| `/api/orders` | POST | Caregiver orders food for an elder based on an `AudioEvent` | `requireCaregiver` + `pay_food_orders` |
+| `/api/orders/[id]` | PATCH | Advance order status / mark paid | `requireCaregiver` |
+| `/api/pairings/qr` | POST | Generate a short-lived invite token + QR payload | `requireCaregiver` |
+| `/api/pairings/consume` | POST | Elder device consumes QR token → create pairing → issue device session | — (device fingerprint in body) |
+| `/api/pairings/[id]` | PATCH | Update pairing permissions (primary-only) | `requireCaregiver` + `requirePrimary` |
+| `/api/invites` | POST | Caregiver invites secondary caregiver | `requireCaregiver` + `invite_caregivers` |
+| `/api/invites/[token]` | GET | Fetch invite summary | — |
+| `/api/invites/[token]/accept` | POST | Secondary caregiver accepts | `requireCaregiver` |
+| `/api/notifications/[id]/ack` | POST | Ack / lock a notification (only one caregiver wins the lock) | `requireCaregiver` |
+| `/api/points/me` | GET | Current point balance | `requireCaregiver` |
+| `/api/consents` | POST | Record consent (audio_ai / health_data / marketing) | `requireCaregiver` or `requireDevice` |
+| `/api/test-seed` | POST | **Dev/test only** — reset repo + seed deterministic data + set cookies | NODE_ENV ≠ production |
+| `/api/test-reset` | POST | **Dev/test only** — reset repository, Gemini adapter, event bus | NODE_ENV ≠ production |
+
+---
 
 ## Component Usage Rules
 
-**NEVER use native HTML elements directly** — always use wrapped components from `src/components/`.
+**NEVER use native HTML** (`<button>`, `<input>`, `<dialog>`, `<form>`) — always use `@/components/atom/*`.
+**NEVER import from `@radix-ui/*`** in `src/modules/` — only `src/components/atom/*` may. (Rules A1–A2.)
 
-**NEVER import from `@radix-ui/` directly in application code** — only `src/components/atom/` files may import Radix primitives. Application code (modules, pages) must import from `@/components/atom/` or `@/components/molecules/`.
-
-### Component Hierarchy
+### Hierarchy
 
 ```
-@radix-ui/* (Radix primitives)
-    ↓ (imported ONLY by atom components)
-src/components/atom/        ← Wrapped Radix components with styling + variants
-    ↓ (imported by molecules and application code)
-src/components/molecules/   ← Composed components (layout, sidebar, toast, etc.)
-    ↓ (imported by application code)
-src/modules/, src/app/      ← Application code — ONLY imports from @/components/
+@radix-ui/*  (wrapped ONLY by atoms)
+   │
+   ▼
+src/components/atom/*   — Button, Input, Label, Dialog, RadioGroup, Checkbox, Switch, Textarea,
+                          Card, Badge, Avatar, Skeleton
+   │
+   ▼
+src/components/molecule/* — domain components that compose atoms
+   │
+   ▼
+src/modules/*, src/app/* — only import from @/components/*
 ```
 
-### Available Atom Components
+### Atoms (`src/components/atom/`)
 
-| Component | Wraps | Import |
-|-----------|-------|--------|
-| `Button` | `@radix-ui/react-slot` | `@/components/atom/button` |
-| `Input` | native input (styled) | `@/components/atom/input` |
-| `Textarea` | native textarea (styled) | `@/components/atom/textarea` |
-| `Label` | `@radix-ui/react-label` | `@/components/atom/label` |
-| `Dialog` | `@radix-ui/react-dialog` | `@/components/atom/dialog` |
-| `Popover` | `@radix-ui/react-popover` | `@/components/atom/popover` |
-| `RadioGroup` | `@radix-ui/react-radio-group` | `@/components/atom/radioGroup` |
-| `CheckboxGroup` | `@radix-ui/react-checkbox` | `@/components/atom/checkboxGroup` |
-| `Combobox` | Button + Popover + Command | `@/components/atom/combobox` |
-| `Command` | `cmdk` | `@/components/atom/command` |
-| `Calendar` | — | `@/components/atom/calendar` |
-| `DatePicker` | Calendar + Popover | `@/components/atom/datePicker` |
-| `Card` | styled div | `@/components/atom/card` |
-| `Table` | styled table | `@/components/atom/table` |
-| `Link` | next/link (styled) | `@/components/atom/link` |
-| `Skeleton` | — | `@/components/atom/skeleton` |
-| `CodeEditor` | Monaco Editor | `@/components/atom/codeEditor` |
-| `IfElement` | conditional render | `@/components/atom/ifElement` |
-| `EachElement` | list render | `@/components/atom/eachElement` |
-| `Select` | styled select | `@/components/atom/select` |
-| `ResizablePanel` | resizable layout | `@/components/atom/resizablePanel` |
-| `Info` | info display | `@/components/atom/info` |
+`avatar`, `badge`, `button`, `card`, `checkbox`, `dialog`, `input`, `label`, `radioGroup`, `skeleton`, `switch`, `textarea`.
 
-### Molecules
+All expose `variant` / `size` props via `class-variance-authority`. Use `size="xl"` for elder-surface CTAs (rule of thumb: ≥ 56 px tappable).
+
+### Molecules (`src/components/molecule/`)
 
 | Component | Purpose |
-|-----------|---------|
-| `AppLayout` | Main app layout with sidebar |
-| `Sidebar` | Navigation sidebar with controllers |
-| `Navbar` | Top navigation bar |
-| `Dialog` (molecule) | Higher-level composed dialog |
-| `Toast` | Toast notifications |
-| `LoadingSpinner` | Loading indicator |
-| `ThemeToggle` | Dark/light mode toggle |
-| `RouteGuard` | Client-side route protection |
+|---|---|
+| `MicButton` | Large mic trigger with states `idle / listening / uploading / error` + waveform |
+| `ElderMap` | Leaflet map + pins for paired elders' last known locations |
+| `QrDisplay` | Render pairing QR from payload URL (qrcode lib) |
+| `QrScanner` + `QrImageUpload` | Live scan via camera (zxing) + fallback image upload |
+| `MoodChip` | Mood badge with emoji + Thai label (`MOOD_LABEL_TH`) |
+| `PriorityBadge` | Notification priority styling (`critical / high / normal / log`) |
+| `ConsentToggle` | Switch + legal label for PDPA consent |
+| `OtpInput` | 6-digit input with auto-advance |
+| `Stepper` | Registration wizard indicator |
+| `FormField` | Label + error + hint wrapper around an Input |
+
+---
+
+## Shared Types (`src/shared/types/`)
+
+Everything re-exported from `index.ts`:
+
+- `actionResult.ts` — `ActionResult<T> = { success: true; data: T; error: null } | { success: false; data: null; error: string; errorCode?: string }`
+- `entities.ts` — `User`, `ElderProfile`, `Medication`, `Contact`, `Pairing`, `OtpChallenge`, `Session`, `DeviceSession`, `AudioEvent`, `Notification`, `Order`, `Invite`, `PointEntry`, `Consent`, `ElderLocation`
+- `role.ts` — `Role = 'elder' | 'caregiver'`
+- `intent.ts` — `INTENTS = ['HUNGRY','PAIN','DANGER','LONELY','CHAT','UNKNOWN']`, `Intent`
+- `mood.ts` — `MOODS = ['DANGER','PAIN','HUNGRY','LONELY','SAD','HAPPY','NORMAL']`, `Priority = 'critical'|'high'|'normal'|'log'`, `MOOD_PRIORITY`, `MOOD_LABEL_TH`
+- `permission.ts` — `PERMISSION_KEYS`, `PermissionKey`, `Permissions`, `DEFAULT_PRIMARY_PERMISSIONS`, `DEFAULT_SECONDARY_PERMISSIONS`
 
 ---
 
 ## Critical Rules
 
-See full list in `CLAUDE.md` (12 rules). Key ones for this doc:
-- Always use `@/components/` — never native HTML or `@radix-ui/` directly
-- All API calls go through `src/services/adapter/`
-- Use `type` over `interface`
+See `CLAUDE.md` for the full A1–A12 list. The high-leverage ones:
+
+- **A1** Use `@/components/` — never native HTML
+- **A2** No `@radix-ui/*` imports in `src/modules/`
+- **A3** Controller-View pattern (see `02-controller-view-pattern.md`)
+- **A4** API calls go through `src/services/adapter/fetcher.ts` (client) or `src/services/repository` (server)
+- **A9** Server Actions and API responses both use `ActionResult<T>`-shaped JSON
+- **A10** Never `eval`/execute user expressions in the browser
 
 ---
 
-## Feature Status
+## Feature Status (MVP)
 
 ### Implemented
-- Visual Canvas: drag-and-drop, pan, zoom, minimap, edge validation, error indicators, node palette, drop-on-edge insert
-- All 12 Node Types: Start, End, Code, HTTP, DB, If, Switch, Response, Error, Sub-Workflow, Webhook, Decision
-- Monaco Editor: syntax highlighting, IntelliSense, reserved variables autocomplete, fullscreen, auto-save (400ms debounce)
-- Global State: workflow-level variables, globalState API (get/set/has/getAll), visual editor
-- Workflow Management: create, save, publish, delete, draft/published versioning, list, detail, import/export
-- Schema System: JSON Schema 2020-12, visual schema editor, Ajv validation, sample data validation
-- Undo/Redo: graph snapshots (max 50), Ctrl+Z / Ctrl+Shift+Z
-- Auth & RBAC: OAuth 2.0 (Microsoft), cookie sessions, middleware protection, 5 roles
-- Execution: workflow run with validation, node status tracking, error collection, execution history
-- UI/UX: shadcn/ui, Tailwind dark mode, toast, dialog, i18n, responsive layout
-- Release Management: create, verify, publish, export releases with artifact selection
-- Deployment: import packages, rollback, deployment history
-- Decision Tables: spreadsheet-like grid editor, versioning, draft management
+- Caregiver auth: Google OAuth + phone OTP + JWT cookie sessions with refresh rotation
+- Elder device session (no login) — bound to `deviceFingerprint`
+- QR pairing flow: caregiver generates QR → elder scans → consume → device session issued
+- Secondary caregiver invites with permission scoping (`DEFAULT_SECONDARY_PERMISSIONS`)
+- Elder home voice-first capture → upload → Gemini mock analyse → AudioEvent → fan-out to caregivers
+- Caregiver dashboard: SSE event feed, mood counts, notifications ack (with lock), elder map, food order trigger
+- Food ordering: menu catalog + allergy-safe recommendations + caregiver-initiated order + mock lifecycle advancement + elder delivery notification
+- PDPA consent capture (audio_ai, health_data, marketing)
+- Elder profile CRUD (conditions, medications, allergies, contacts)
+- Points (pay-on-behalf economy — MVP stub)
+- Thai-first i18n (`th` default, `en` parity)
 
-### In Progress
-- Enhanced webhook node configuration
-- Workflow execution details improvements
-
-### Planned
-- Python language support for code nodes
-- Schedule triggers (cron)
-- Event-based triggers
-- Workflow templates
-- Team collaboration features
-- Audit logging UI
+### Not in MVP
+- Real SMS / real payment — both are mocks
+- Push notifications (web push)
+- Offline support beyond in-memory repo
+- Elder-to-elder social features
 
 ---
 
 ## Key Design Decisions
 
-- **Feature-based modules** over traditional atomic design for business logic
-- **Zustand + Immer** over Redux for simpler, less boilerplate state management
-- **Server Actions** (primary) for mutations; client hooks (legacy) still supported
-- **Monaco Editor** for all code/JSON/SQL editing with custom completion providers
-- **@xyflow/react** for workflow canvas with custom node components
-- **Biome** over ESLint+Prettier for faster linting/formatting
-- **Cookie-based auth** with OAuth 2.0 (Microsoft) — no JWT in frontend
+- **Pluggable boundaries** — every external dep (Gemini, repo, payment/food) sits behind an interface with a mock default. See `06-integrations.md`.
+- **SSE, not WebSocket** — cheaper infra, survives most proxies, fits our read-mostly push needs.
+- **Controller-View, not MVC/Redux** — local `useState` inside `globalState.ts` keeps each module self-contained; Zustand is available but unused in current modules.
+- **In-memory repo by default** — `IRepository` implementation in `inMemoryRepository.ts` is the ground truth; swap via `__setRepository()` to go to Postgres later without touching routes or modules.
+- **Thai-first** — never hard-code Thai strings in components; use `useTranslations()` keys from `messages/th.json`. See `08-i18n-thai-first.md`.
+- **Elder surface ≠ caregiver surface** — large targets, no nav chrome, no login screen. See `09-elder-caregiver-surfaces.md`.
+- **Biome over ESLint** — faster, fewer moving parts. No `biome-ignore` (rule A12).
