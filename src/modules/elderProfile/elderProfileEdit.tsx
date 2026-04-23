@@ -40,16 +40,25 @@ export function ElderProfileEdit({ elderId }: { elderId: string }) {
   }
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-4 p-6">
-      <h1 className="text-3xl font-bold">แก้ไขข้อมูล</h1>
+    <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 px-5 py-6">
+      <header className="border-b border-[var(--rule)] pb-3">
+        <div className="mono-label">ผู้สูงอายุ · แก้ไข</div>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+          {state.data?.name ?? 'แก้ไขข้อมูล'}
+        </h1>
+      </header>
+
       {state.loading ? <Skeleton className="h-48" /> : null}
       {state.error ? (
-        <p role="alert" className="text-destructive">
+        <p
+          role="alert"
+          className="rounded-md border border-[color-mix(in_oklch,var(--danger)_35%,var(--rule))] bg-[var(--danger-wash)] p-3 text-sm text-[var(--danger)]"
+        >
           {state.error}
         </p>
       ) : null}
       {state.saved ? (
-        <p role="status" className="text-primary">
+        <p role="status" className="text-[var(--brand-ink)]">
           บันทึกเรียบร้อย
         </p>
       ) : null}
@@ -57,7 +66,7 @@ export function ElderProfileEdit({ elderId }: { elderId: string }) {
       {state.data ? (
         <Card>
           <CardHeader>
-            <CardTitle>{state.data.name}</CardTitle>
+            <CardTitle className="mono-label">ข้อมูลสุขภาพ</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <FormField label="ที่อยู่" htmlFor="e-address">
