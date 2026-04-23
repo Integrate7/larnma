@@ -22,7 +22,6 @@ function CallbackHandler() {
           const userData = await response.json()
 
           if (userData.error) {
-            console.error('Auth error:', userData.error)
             router.push('/')
             return
           }
@@ -35,8 +34,7 @@ function CallbackHandler() {
 
           // Redirect to register page with a hint that we're coming from google
           router.push('/register?from=google')
-        } catch (error) {
-          console.error('Callback error:', error)
+        } catch {
           router.push('/')
         }
       } else {

@@ -126,4 +126,115 @@ describe('/api/audio', () => {
     const body = await r.json()
     expect(body.mood).toBe('NORMAL')
   })
+
+  it('processes form-data body with fakeKeyword', async () => {
+    const { elderId } = seedElderWithCaregivers()
+    const s = await issueDeviceSession({ elderId, fingerprint: 'fp' })
+    const form = new FormData()
+    form.append('fakeKeyword', 'หิวข้าว')
+    const r = await POST(
+      new NextRequest('http://localhost:3000/api/audio', {
+        method: 'POST',
+        headers: {
+          host: 'localhost:3000',
+          cookie: `${COOKIES.device}=${s.token}`,
+        },
+        body: form,
+      }),
+    )
+    expect(r.status).toBe(200)
+    const body = await r.json()
+    expect(['HUNGRY', 'NORMAL']).toContain(body.mood)
+  })
+
+  it('processes form-data with formData parse failure gracefully', async () => {
+    const { elderId } = seedElderWithCaregivers()
+    const s = await issueDeviceSession({ elderId, fingerprint: 'fp' })
+    const r = await POST(
+      new NextRequest('http://localhost:3000/api/audio', {
+        method: 'POST',
+        headers: {
+          'content-type': 'text/plain',
+          host: 'localhost:3000',
+          cookie: `${COOKIES.device}=${s.token}`,
+        },
+        body: 'raw text',
+      }),
+    )
+    expect(r.status).toBe(200)
+    expect(await r.json()).toMatchObject({ mood: expect.any(String) })
+  })
+
+  it('JSON body without hintKeyword field falls back to empty string', async () => {
+    const { elderId } = seedElderWithCaregivers()
+    const s = await issueDeviceSession({ elderId, fingerprint: 'fp' })
+    const r = await POST(jsonReq({}, `${COOKIES.device}=${s.token}`))
+    expect(r.status).toBe(200)
+    expect(await r.json()).toMatchObject({ mood: expect.any(String) })
+  })
+
+  it('form-data without fakeKeyword field falls back to empty string', async () => {
+    const { elderId } = seedElderWithCaregivers()
+    const s = await issueDeviceSession({ elderId, fingerprint: 'fp' })
+    const form = new FormData()
+    const r = await POST(
+      new NextRequest('http://localhost:3000/api/audio', {
+        method: 'POST',
+        headers: { host: 'localhost:3000', cookie: `${COOKIES.device}=${s.token}` },
+        body: form,
+      }),
+    )
+    expect(r.status).toBe(200)
+    expect(await r.json()).toMatchObject({ mood: expect.any(String) })
+  })
+
+  it('no content-type header falls through to formData path', async () => {
+    const { elderId } = seedElderWithCaregivers()
+    const s = await issueDeviceSession({ elderId, fingerprint: 'fp' })
+    const r = await POST(
+      new NextRequest('http://localhost:3000/api/audio', {
+        method: 'POST',
+        headers: { host: 'localhost:3000', cookie: `${COOKIES.device}=${s.token}` },
+        body: null,
+      }),
+    )
+    expect(r.status).toBe(200)
+  })
+
+  it('HUNGRY with no elder profile uses empty sets for conditions', async () => {
+    const repo = getRepository()
+    const elder = repo.createUser({ role: 'elder', phone: '0777', name: 'ย่า' })
+    const cg = repo.createUser({ role: 'caregiver', phone: '0811', name: 'CG' })
+    repo.createPairing({ elderId: elder.id, caregiverId: cg.id, isPrimary: true, permissions: DEFAULT_PRIMARY_PERMISSIONS })
+    const s = await issueDeviceSession({ elderId: elder.id, fingerprint: 'fp' })
+    const r = await POST(jsonReq({ hintKeyword: 'หิว' }, `${COOKIES.device}=${s.token}`))
+    expect(r.status).toBe(200)
+    const body = await r.json()
+    expect(body.mood).toBe('HUNGRY')
+  })
+
+  it('HUNGRY with elder health conditions filters menu suggestions', async () => {
+    const repo = getRepository()
+    const elder = repo.createUser({ role: 'elder', phone: '0999', name: 'ย่า' })
+    repo.createElderProfile({
+      userId: elder.id,
+      conditions: ['เบาหวาน'],
+      symptoms: [],
+      medications: [],
+      allergies: ['กุ้ง'],
+      foodPreferences: [],
+      foodDislikes: [],
+      addressLine: '1 ถนน',
+      district: 'เขต',
+      province: 'กรุงเทพ',
+      postalCode: '10000',
+    })
+    const cg = repo.createUser({ role: 'caregiver', phone: '0811', name: 'CG' })
+    repo.createPairing({ elderId: elder.id, caregiverId: cg.id, isPrimary: true, permissions: DEFAULT_PRIMARY_PERMISSIONS })
+    const s = await issueDeviceSession({ elderId: elder.id, fingerprint: 'fp' })
+    const r = await POST(jsonReq({ hintKeyword: 'หิว' }, `${COOKIES.device}=${s.token}`))
+    expect(r.status).toBe(200)
+    const body = await r.json()
+    expect(body.mood).toBe('HUNGRY')
+  })
 })

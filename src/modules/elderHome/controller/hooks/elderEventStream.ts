@@ -5,14 +5,14 @@ type GS = ReturnType<typeof useElderHomeGlobalState>
 
 export function useElderEventStream(gs: GS) {
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    const Ctor = (window as unknown as { EventSource?: typeof EventSource }).EventSource
+    if (globalThis.window === undefined) return
+    const Ctor = (globalThis.window as unknown as { EventSource?: typeof EventSource }).EventSource
     if (!Ctor) return
 
     const es = new Ctor('/api/elder/events/stream', { withCredentials: true })
     es.onmessage = (msg) => {
       try {
-        const parsed = JSON.parse((msg as MessageEvent).data) as {
+        const parsed = JSON.parse(msg.data) as {
           kind: string
           menuName?: string
           caregiverName?: string

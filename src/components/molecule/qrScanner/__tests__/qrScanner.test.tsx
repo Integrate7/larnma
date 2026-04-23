@@ -59,6 +59,37 @@ describe('QrScanner', () => {
     expect(onError).not.toHaveBeenCalled()
   })
 
+  it('calls onError for non-transient callback error', async () => {
+    const onError = jest.fn()
+    decodeFromVideoDevice.mockImplementation(
+      async (_id: string | undefined, _video: HTMLVideoElement, cb: (r: unknown, err: unknown) => void) => {
+        const err = new Error('camera failure')
+        err.name = 'DeviceError'
+        cb(undefined, err)
+        return { stop: jest.fn() }
+      },
+    )
+    render(<QrScanner onDecode={() => {}} onError={onError} />)
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalled()
+    })
+  })
+
+  it('stops when cancelled before decodeFromVideoDevice resolves', async () => {
+    const stopFn = jest.fn()
+    let resolveDecoder!: (v: { stop: () => void }) => void
+    decodeFromVideoDevice.mockImplementation(
+      () => new Promise<{ stop: () => void }>((resolve) => { resolveDecoder = resolve }),
+    )
+    const { unmount } = render(<QrScanner onDecode={() => {}} />)
+    // Advance past the 50ms defer
+    await new Promise((r) => setTimeout(r, 60))
+    unmount()
+    resolveDecoder({ stop: stopFn })
+    await new Promise((r) => setTimeout(r, 0))
+    expect(stopFn).toHaveBeenCalled()
+  })
+
   it('does not start when disabled', async () => {
     render(<QrScanner onDecode={() => {}} disabled />)
     await new Promise((r) => setTimeout(r, 120))

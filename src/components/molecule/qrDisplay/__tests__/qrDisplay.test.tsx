@@ -32,4 +32,33 @@ describe('QrDisplay', () => {
       expect(screen.getByAltText('pair QR')).toBeInTheDocument()
     })
   })
+
+  it('renders code prop when provided', async () => {
+    render(<QrDisplay value="x" dataUrl="data:image/png;base64,a" code="ABC-123" />)
+    await waitFor(() => {
+      expect(screen.getByTestId('qr-code')).toHaveTextContent('ABC-123')
+    })
+  })
+
+  it('renders expiry when expiresAt is provided', async () => {
+    const future = new Date(Date.now() + 60000)
+    render(<QrDisplay value="x" dataUrl="data:image/png;base64,a" expiresAt={future} />)
+    await waitFor(() => {
+      expect(screen.getByTestId('qr-expiry')).toBeInTheDocument()
+    })
+  })
+
+  it('shows skeleton while loading (no dataUrl)', () => {
+    const { container } = render(<QrDisplay value="hello" />)
+    expect(container.querySelector('[data-testid="qr-skeleton"]')).toBeInTheDocument()
+  })
+
+  it('handles QRCode.toDataURL rejection gracefully', async () => {
+    const QRCode = require('qrcode')
+    QRCode.default.toDataURL.mockRejectedValueOnce(new Error('fail'))
+    const { container } = render(<QrDisplay value="badvalue" />)
+    await waitFor(() => {
+      expect(container.querySelector('[data-testid="qr-skeleton"]')).toBeInTheDocument()
+    })
+  })
 })

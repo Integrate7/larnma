@@ -15,8 +15,6 @@ export async function POST(req: NextRequest) {
 
   const auth = await requireCaregiver(req)
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: 401 })
-  if (auth.role !== 'caregiver')
-    return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 })
 
   let body: z.infer<typeof createPairingQrBodySchema>
   try {

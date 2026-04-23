@@ -66,7 +66,7 @@ export function QrDisplay({
   )
 }
 
-function QrExpiry({ expiresAt }: { expiresAt: Date }) {
+function QrExpiry({ expiresAt }: Readonly<{ expiresAt: Date }>) {
   const [remaining, setRemaining] = useState<number>(
     Math.max(0, Math.floor((expiresAt.getTime() - Date.now()) / 1000)),
   )

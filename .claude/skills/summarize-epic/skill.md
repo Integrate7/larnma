@@ -23,7 +23,7 @@ Key rules you MUST NOT bend:
 - **No fabrication.** If a section (goal, AC, scope-out, …) is missing in the source, render it as `_not specified_`. Never fill gaps with plausible-sounding content.
 - **Redact secrets** matching `sk_`, `Bearer `, `password=`, `api_key=`, raw `.env` lines, or `BEGIN … PRIVATE KEY` in the output.
 - **Do not chain into `/implement`.** Suggest the likely type in the output, but let the user invoke the next skill manually.
-- **Do not save to disk unless asked.** Default: print to chat. If the user says "save it", write to `docs/plans/<YYYY-MM-DD>-<slug>.md` and confirm the path.
+- **Do not save to disk unless asked.** Default: print to chat. If the user says "save it", write to `docs/superpowers/plans/<YYYY-MM-DD>-<slug>.md` and confirm the path.
 - **Auth failure = stop.** If the Atlassian MCP reports unauthenticated, tell the user to run the authenticate tool and STOP — do not loop or prompt for credentials yourself.
 
 If the doc is missing or unreadable, STOP and tell the user — do not fall back to generic summarisation behavior.

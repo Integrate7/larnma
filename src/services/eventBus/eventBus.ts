@@ -25,7 +25,7 @@ export function subscribe(caregiverId: string, listener: CaregiverListener): () 
   return () => {
     const s = listenersByCaregiver.get(caregiverId)
     s?.delete(listener)
-    if (s && s.size === 0) listenersByCaregiver.delete(caregiverId)
+    if (s?.size === 0) listenersByCaregiver.delete(caregiverId)
   }
 }
 
@@ -36,7 +36,7 @@ export function subscribeElder(elderId: string, listener: ElderListener): () => 
   return () => {
     const s = listenersByElder.get(elderId)
     s?.delete(listener)
-    if (s && s.size === 0) listenersByElder.delete(elderId)
+    if (s?.size === 0) listenersByElder.delete(elderId)
   }
 }
 

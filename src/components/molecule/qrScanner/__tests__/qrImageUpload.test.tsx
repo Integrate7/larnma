@@ -34,10 +34,20 @@ describe('QrImageUpload', () => {
       onload: () => void = () => {}
       onerror: () => void = () => {}
       src: string = ''
+      width: number = 0
+      height: number = 0
       constructor() {
         setTimeout(() => {
           if (this.src === 'error-url') {
             this.onerror()
+          } else if (this.src === 'landscape-url') {
+            this.width = 1200
+            this.height = 600
+            this.onload()
+          } else if (this.src === 'portrait-url') {
+            this.width = 400
+            this.height = 1200
+            this.onload()
           } else {
             this.onload()
           }
@@ -52,10 +62,17 @@ describe('QrImageUpload', () => {
 
   beforeEach(() => {
     ;(useTranslations as jest.Mock).mockReturnValue(mockT)
-    global.URL.createObjectURL = jest.fn((file) =>
-      file instanceof File && file.name === 'error.png' ? 'error-url' : 'blob:url',
-    )
+    global.URL.createObjectURL = jest.fn((file) => {
+      if (!(file instanceof File)) return 'blob:url'
+      if (file.name === 'error.png') return 'error-url'
+      if (file.name === 'landscape.png') return 'landscape-url'
+      if (file.name === 'portrait.png') return 'portrait-url'
+      return 'blob:url'
+    })
     global.URL.revokeObjectURL = jest.fn()
+    HTMLCanvasElement.prototype.getContext = jest.fn().mockReturnValue({
+      drawImage: jest.fn(),
+    })
   })
 
   it('decodes QR from uploaded file', async () => {
@@ -71,6 +88,40 @@ describe('QrImageUpload', () => {
 
     await waitFor(() => {
       expect(onDecode).toHaveBeenCalledWith('UPLOAD_TOKEN')
+    })
+  })
+
+  it('decodes QR from landscape image (width > height resize path)', async () => {
+    const onDecode = jest.fn()
+    decodeFromImageElement.mockRejectedValue(new Error('no qr original'))
+    decodeFromCanvas.mockResolvedValueOnce({ getText: () => 'LANDSCAPE_TOKEN' })
+
+    render(<QrImageUpload onDecode={onDecode} />)
+
+    const file = new File(['foo'], 'landscape.png', { type: 'image/png' })
+    const input = screen.getByTestId('qr-image-upload-input') as HTMLInputElement
+    fireEvent.change(input, { target: { files: [file] } })
+
+    await waitFor(() => {
+      expect(onDecode).toHaveBeenCalledWith('LANDSCAPE_TOKEN')
+    })
+  })
+
+  it('decodes QR from portrait image (height > width resize path)', async () => {
+    const onDecode = jest.fn()
+    decodeFromImageElement.mockRejectedValue(new Error('no qr original'))
+    decodeFromCanvas
+      .mockImplementationOnce(() => { throw new Error('no qr first resize') })
+      .mockResolvedValueOnce({ getText: () => 'PORTRAIT_TOKEN' })
+
+    render(<QrImageUpload onDecode={onDecode} />)
+
+    const file = new File(['foo'], 'portrait.png', { type: 'image/png' })
+    const input = screen.getByTestId('qr-image-upload-input') as HTMLInputElement
+    fireEvent.change(input, { target: { files: [file] } })
+
+    await waitFor(() => {
+      expect(onDecode).toHaveBeenCalledWith('PORTRAIT_TOKEN')
     })
   })
 

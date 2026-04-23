@@ -4,7 +4,7 @@ import { cn } from '@/shared/helpers/cn'
 import type { AvatarProps } from './types'
 
 export const Avatar = forwardRef<
-  React.ElementRef<typeof AvatarPrimitive.Root>,
+  React.ComponentRef<typeof AvatarPrimitive.Root>,
   AvatarProps
 >(function Avatar({ className, ...props }, ref) {
   return (
@@ -20,7 +20,7 @@ export const Avatar = forwardRef<
 })
 
 export const AvatarImage = forwardRef<
-  React.ElementRef<typeof AvatarPrimitive.Image>,
+  React.ComponentRef<typeof AvatarPrimitive.Image>,
   ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
 >(function AvatarImage({ className, ...props }, ref) {
   return (
@@ -33,7 +33,7 @@ export const AvatarImage = forwardRef<
 })
 
 export const AvatarFallback = forwardRef<
-  React.ElementRef<typeof AvatarPrimitive.Fallback>,
+  React.ComponentRef<typeof AvatarPrimitive.Fallback>,
   ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback>
 >(function AvatarFallback({ className, ...props }, ref) {
   return (

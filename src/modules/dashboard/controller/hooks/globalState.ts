@@ -4,7 +4,6 @@ import type {
   ElderLocation,
   Mood,
   Notification,
-  Priority,
 } from '@/shared/types'
 import { MOODS } from '@/shared/types'
 import type { DashboardGlobalState, PairingInfo } from '../../types'
@@ -61,8 +60,6 @@ export function useDashboardGlobalState() {
     setEvents(events)
     setNotifications(notis)
   }
-
-  void ({} as Priority) // keep import alive when tree-shaken
 
   const addOrderedEventId = (eventId: string) =>
     setOrderedEventIds((prev) =>

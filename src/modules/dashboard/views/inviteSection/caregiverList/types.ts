@@ -17,13 +17,13 @@ export type CaregiverListHandler = {
   revoke: (pairingId: string) => Promise<void>
 }
 
-export type CaregiverListProps = {
+export type CaregiverListProps = Readonly<{
   elderId: string
-}
+}>
 
-export type CaregiverListViewProps = {
+export type CaregiverListViewProps = Readonly<{
   caregivers: CaregiverItem[]
   loading: boolean
   error: string | null
   onRevoke: (pairingId: string) => void
-}
+}>

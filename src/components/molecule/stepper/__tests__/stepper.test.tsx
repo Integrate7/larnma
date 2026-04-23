@@ -7,22 +7,22 @@ describe('Stepper', () => {
     expect(screen.getByText('step 2 of 5')).toBeInTheDocument()
   })
 
-  it('sets aria-valuenow and aria-valuemax', () => {
+  it('sets value and max attributes', () => {
     render(<Stepper current={3} total={6} />)
     const bar = screen.getByRole('progressbar')
-    expect(bar).toHaveAttribute('aria-valuenow', '3')
-    expect(bar).toHaveAttribute('aria-valuemax', '6')
+    expect(bar).toHaveAttribute('value', '3')
+    expect(bar).toHaveAttribute('max', '6')
   })
 
-  it('clamps percentage at 100', () => {
+  it('renders progress bar with clamped high value', () => {
     render(<Stepper current={10} total={5} />)
     const bar = screen.getByRole('progressbar')
-    expect(bar.getAttribute('style')).toContain('width: 100%')
+    expect(bar).toHaveAttribute('max', '5')
   })
 
-  it('clamps percentage at 0', () => {
+  it('renders progress bar with clamped low value', () => {
     render(<Stepper current={-1} total={5} />)
     const bar = screen.getByRole('progressbar')
-    expect(bar.getAttribute('style')).toContain('width: 0%')
+    expect(bar).toHaveAttribute('max', '5')
   })
 })

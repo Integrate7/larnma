@@ -16,14 +16,14 @@ import { OtpInput } from '@/components/molecule/otpInput'
 import { QrDisplay } from '@/components/molecule/qrDisplay'
 import type { RegisterForm } from '../types'
 
-type StepProps = {
+type StepProps = Readonly<{
   form: RegisterForm
   onNext: () => void | Promise<void>
   onBack: () => void
   submitting: boolean
-}
+}>
 
-export function WelcomeStep({ onNext }: { onNext: () => void }) {
+export function WelcomeStep({ onNext }: Readonly<{ onNext: () => void }>) {
   const t = useTranslations()
   return (
     <Card>
@@ -51,10 +51,10 @@ export function WelcomeStep({ onNext }: { onNext: () => void }) {
 export function ChoiceStep({
   onNext,
   onGoogle,
-}: {
+}: Readonly<{
   onNext: () => void
   onGoogle: () => void
-}) {
+}>) {
   const t = useTranslations()
   return (
     <Card>
@@ -71,7 +71,7 @@ export function ChoiceStep({
           onClick={onGoogle}
           className="flex w-full items-center justify-center gap-2"
         >
-          <svg className="h-5 w-5" viewBox="0 0 24 24" role="img" aria-label="Google">
+          <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
             <title>Google</title>
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -158,7 +158,7 @@ export function OtpStep({
   onNext,
   onBack,
   submitting,
-}: StepProps & { phone: string }) {
+}: StepProps) {
   const t = useTranslations()
   const otp = form.watch('otp')
   return (
@@ -397,7 +397,7 @@ function csv(
 ) {
   const list = form.watch(field) ?? []
   return {
-    value: (list as string[]).join(', '),
+    value: list.join(', '),
     set: (raw: string) =>
       form.setValue(
         field,
@@ -637,11 +637,11 @@ export function QrStep({
   qrDataUrl,
   pairingToken,
   onGenerate,
-}: {
+}: Readonly<{
   qrDataUrl: string | null
   pairingToken: string | null
   onGenerate: () => void
-}) {
+}>) {
   const t = useTranslations()
   return (
     <Card>

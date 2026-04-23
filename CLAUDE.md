@@ -30,7 +30,7 @@ Mirror of `workflow-service` — `/self-review` will block any violation.
 - Context docs (codebase, patterns, data, testing) → [`docs/agents/context/`](./docs/agents/context/)
 - Skill playbooks (`/implement`, `/verify`, `/self-review`, `/ship`) → [`docs/agents/skills/`](./docs/agents/skills/)
 - MVP spec → [`docs/mvp/mvp.md`](./docs/mvp/mvp.md) (authoritative product scope)
-- Implementation plan → [`docs/plans/2026-04-23-larnma-mvp.md`](./docs/plans/2026-04-23-larnma-mvp.md)
+- Implementation plan → [`docs/superpowers/plans/2026-04-23-larnma-mvp.md`](./docs/superpowers/plans/2026-04-23-larnma-mvp.md)
 
 ## Larnma-specific notes
 

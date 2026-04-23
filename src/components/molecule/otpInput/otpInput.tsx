@@ -24,7 +24,7 @@ export function OtpInput({
   const digits = Array.from({ length }, (_, i) => value[i] ?? '')
 
   const handleChange = (i: number, raw: string) => {
-    const ch = raw.replace(/\D/g, '').slice(-1)
+    const ch = raw.replaceAll(/\D/g, '').slice(-1)
     const next = digits.slice()
     next[i] = ch
     onChange(next.join(''))
@@ -40,7 +40,7 @@ export function OtpInput({
   }
 
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
-    const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, length)
+    const text = e.clipboardData.getData('text').replaceAll(/\D/g, '').slice(0, length)
     if (!text) return
     e.preventDefault()
     onChange(text)

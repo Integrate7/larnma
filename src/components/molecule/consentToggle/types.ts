@@ -1,4 +1,4 @@
-export type ConsentToggleProps = {
+export type ConsentToggleProps = Readonly<{
   id: string
   label: string
   description?: string
@@ -6,4 +6,4 @@ export type ConsentToggleProps = {
   checked: boolean
   onChange: (checked: boolean) => void
   disabled?: boolean
-}
+}>

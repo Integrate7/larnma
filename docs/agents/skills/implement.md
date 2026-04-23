@@ -46,9 +46,25 @@ Branch-to-commit-type mapping is enforced by `/self-review` rule D4 — catching
 
 ---
 
-## Step 3 — Draft a plan file and confirm with the user
+## Step 3 — Clarify spec/plan with the user (superpowers:brainstorming)
 
-Before writing any code, create a plan file under `docs/plans/` and get the user to confirm the approach.
+Before writing any code, invoke **`superpowers:brainstorming`** to clarify the spec and plan with the user.
+
+The brainstorming skill will:
+1. Explore project context
+2. Ask clarifying questions one at a time
+3. Propose 2–3 approaches with trade-offs
+4. Present a design and get user approval
+5. Write a design doc to `docs/superpowers/specs/`
+6. Transition to `superpowers:writing-plans`
+
+Only after the brainstorming skill completes and the user approves the design should you proceed to draft the plan file below.
+
+---
+
+## Step 3b — Draft a plan file and confirm with the user
+
+After brainstorming is complete, create a plan file under `docs/superpowers/plans/` and get the user to confirm the approach.
 
 ### 3.1 When a plan file is required
 
@@ -63,12 +79,12 @@ For tiny tasks (one-liner fix, single-file doc tweak), you may skip the plan fil
 ### 3.2 File location and naming
 
 ```
-docs/plans/<YYYY-MM-DD>-<kebab-slug>.md
+docs/superpowers/plans/<YYYY-MM-DD>-<kebab-slug>.md
 ```
 
 - `<YYYY-MM-DD>`: today's date (use the current date from the session context, NOT a relative date)
 - `<kebab-slug>`: derived from the branch slug (usually the same as the branch, minus the type prefix)
-- Example: branch `feat/workflow-export-dialog` on 2026-04-20 → `docs/plans/2026-04-20-workflow-export-dialog.md`
+- Example: branch `feat/workflow-export-dialog` on 2026-04-20 → `docs/superpowers/plans/2026-04-20-workflow-export-dialog.md`
 
 If a matching `*-design.md` already exists (human-authored design doc), reference it — do not duplicate. The implementation plan is separate and actionable.
 
@@ -90,7 +106,7 @@ Bullets of what is explicitly OUT of scope — prevents scope creep.
 ## Context
 - What exists today (files, flows, behavior)
 - What is missing / broken / suboptimal
-- Link to any related design doc in `docs/plans/*-design.md`, issue, or spec
+- Link to any related design doc in `docs/superpowers/plans/*-design.md`, issue, or spec
 
 ## Approach
 High-level strategy in 2–5 bullets. Key files to touch. Order of execution.
@@ -111,7 +127,7 @@ Edge cases, unknowns, assumptions that the user should confirm before coding.
 ### 3.4 Confirmation loop
 
 1. Write the file with `Write`.
-2. Show the user the path and ask: **"Plan saved to `docs/plans/<file>.md` — ตกลงแนวทางนี้ไหม? ถ้าต้องการปรับ Approach / Tasks / Non-goals บอกได้"**
+2. Show the user the path and ask: **"Plan saved to `docs/superpowers/plans/<file>.md` — ตกลงแนวทางนี้ไหม? ถ้าต้องการปรับ Approach / Tasks / Non-goals บอกได้"**
 3. If the user asks for changes, edit the file and re-confirm. Do NOT start coding.
 4. Once the user approves, proceed to Step 4.
 

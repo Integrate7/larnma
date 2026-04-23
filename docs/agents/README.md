@@ -152,7 +152,7 @@ Branch prefix MUST match the type. `/self-review` rule D1 rejects anything else.
 3. **Invoke `/implement`** (or `/implement <type>` to skip the classification question). It will:
    - Confirm the type
    - Check the branch prefix matches
-   - Draft a plan file at `docs/plans/<YYYY-MM-DD>-<slug>.md` and **wait for your approval** before touching production code
+   - Draft a plan file at `docs/superpowers/plans/<YYYY-MM-DD>-<slug>.md` and **wait for your approval** before touching production code
    - Load the checklist for that type
 4. **Write code** following the per-type checklist. Never use native HTML, never import `@radix-ui/*` in modules, go through `services/adapter/` for APIs — full rules in [`workflow.md §4.1`](./workflow.md) (A1–A12).
 5. **Stop your reply.** The Stop-hook runs `/verify` automatically. If it fails, fix and stop again.

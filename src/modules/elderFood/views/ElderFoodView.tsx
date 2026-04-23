@@ -7,10 +7,10 @@ import { Skeleton } from '@/components/atom/skeleton'
 import type { ElderFoodHandler } from '../controller/hooks/handler'
 import type { ElderFoodState } from '../types'
 
-type Props = {
+type Props = Readonly<{
   state: ElderFoodState
   handler: ElderFoodHandler
-}
+}>
 
 export function ElderFoodView({ state, handler }: Props) {
   const t = useTranslations()

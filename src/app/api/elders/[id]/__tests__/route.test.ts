@@ -112,10 +112,53 @@ describe('PATCH /api/elders/[id]', () => {
     const body = await r.json()
     expect(body.allergies).toContain('แมว')
   })
+
+  it('updates elder basic name', async () => {
+    const { cookie, elderId } = await bootWithElder()
+    const r = await PATCH(
+      makeReq(elderId, 'PATCH', { section: 'basic', fields: { name: 'ชื่อใหม่' } }, cookie),
+      { params: Promise.resolve({ id: elderId }) },
+    )
+    expect(r.status).toBe(200)
+    const body = await r.json()
+    expect(body.name).toBe('ชื่อใหม่')
+  })
+
+  it('updates elder basic phone', async () => {
+    const { cookie, elderId } = await bootWithElder()
+    const r = await PATCH(
+      makeReq(elderId, 'PATCH', { section: 'basic', fields: { phone: '0999999999' } }, cookie),
+      { params: Promise.resolve({ id: elderId }) },
+    )
+    expect(r.status).toBe(200)
+    const body = await r.json()
+    expect(body.phone).toBe('0999999999')
+  })
+
+  it('returns 403 when caregiver lacks edit_elder_profile permission', async () => {
+    const repo = getRepository()
+    const cg = repo.createUser({ role: 'caregiver', phone: '0811', name: 'CG' })
+    const elder = repo.createUser({ role: 'elder', phone: '0822', name: 'ย่า' })
+    repo.createPairing({ elderId: elder.id, caregiverId: cg.id, isPrimary: false, permissions: { ...DEFAULT_SECONDARY_PERMISSIONS, edit_elder_profile: false } })
+    const s = await issueCaregiverSession({ userId: cg.id })
+    const r = await PATCH(makeReq(elder.id, 'PATCH', { section: 'health', fields: { allergies: [] } }, `${COOKIES.access}=${s.accessToken}`), { params: Promise.resolve({ id: elder.id }) })
+    expect(r.status).toBe(403)
+  })
 })
 
 describe('DELETE /api/elders/[id]', () => {
   beforeEach(() => { __setRepository(createInMemoryRepository()) })
+
+  it('rejects cross-origin requests', async () => {
+    const r = await DELETE(
+      new NextRequest(`${ORIGIN}/api/elders/e1`, {
+        method: 'DELETE',
+        headers: { host: 'localhost:3000', origin: 'https://evil.com' },
+      }),
+      { params: Promise.resolve({ id: 'e1' }) },
+    )
+    expect(r.status).toBe(403)
+  })
 
   it('rejects unauthenticated', async () => {
     const r = await DELETE(makeReq('e1', 'DELETE'), { params: Promise.resolve({ id: 'e1' }) })

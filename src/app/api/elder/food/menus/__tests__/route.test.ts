@@ -109,4 +109,14 @@ describe('GET /api/elder/food/menus', () => {
       expect(disliked.isSafe).toBe(false)
     }
   })
+
+  it('returns items even when elder has no profile (null profile fallback)', async () => {
+    const repo = getRepository()
+    const elder = repo.createUser({ role: 'elder', phone: '0811', name: 'ย่า' })
+    const s = await issueDeviceSession({ elderId: elder.id, fingerprint: 'fp' })
+    const r = await GET(req(`${COOKIES.device}=${s.token}`))
+    expect(r.status).toBe(200)
+    const body = await r.json()
+    expect(Array.isArray(body.items)).toBe(true)
+  })
 })

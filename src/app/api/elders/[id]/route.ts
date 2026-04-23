@@ -48,12 +48,10 @@ export async function GET(
   const { id } = await params
   const auth = await requireCaregiver(req)
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: 401 })
-  if (auth.role !== 'caregiver')
-    return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 })
 
   const repo = getRepository()
   const pairing = repo.getPairingByPair(id, auth.userId)
-  if (!pairing || !pairing.permissions.view_dashboard) {
+  if (!pairing?.permissions.view_dashboard) {
     return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 })
   }
   const user = repo.getUserById(id)
@@ -73,8 +71,6 @@ export async function PATCH(
   const { id } = await params
   const auth = await requireCaregiver(req)
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: 401 })
-  if (auth.role !== 'caregiver')
-    return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 })
   if (
     !checkPermission({
       caregiverId: auth.userId,
@@ -116,8 +112,6 @@ export async function DELETE(
   const { id } = await params
   const auth = await requireCaregiver(req)
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: 401 })
-  if (auth.role !== 'caregiver')
-    return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 })
 
   const repo = getRepository()
   const pairing = repo.getPairingByPair(id, auth.userId)

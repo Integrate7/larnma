@@ -20,7 +20,7 @@
 | Testing | Jest 30 + Testing Library (unit, coverage ≥ 80%) · Playwright (E2E) |
 | Lint | Biome 2 |
 
-See [`docs/plans/2026-04-23-larnma-mvp.md`](./docs/plans/2026-04-23-larnma-mvp.md) for the full implementation plan and [`docs/mvp/mvp.md`](./docs/mvp/mvp.md) for the product spec.
+See [`docs/superpowers/plans/2026-04-23-larnma-mvp.md`](./docs/superpowers/plans/2026-04-23-larnma-mvp.md) for the full implementation plan and [`docs/mvp/mvp.md`](./docs/mvp/mvp.md) for the product spec.
 
 ---
 

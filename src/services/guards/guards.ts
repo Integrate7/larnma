@@ -4,9 +4,25 @@ import { getRepository } from '@/services/repository'
 import type { PermissionKey } from '@/shared/types'
 import type { AuthContext, PermissionGuardInput } from './types'
 
+type CaregiverAuthSuccess = {
+  ok: true
+  role: 'caregiver'
+  userId: string
+  sessionId?: string
+}
+
+type ElderAuthSuccess = {
+  ok: true
+  role: 'elder'
+  elderId: string
+  sessionId: string
+}
+
+type AuthFailure = { ok: false; error: 'UNAUTHENTICATED' | 'FORBIDDEN' }
+
 export async function requireCaregiver(
   req: NextRequest,
-): Promise<AuthContext> {
+): Promise<CaregiverAuthSuccess | AuthFailure> {
   const token = readCookie(req, COOKIES.access)
   if (!token) return { ok: false, error: 'UNAUTHENTICATED' }
   const v = await verifyJwt<{
@@ -27,7 +43,9 @@ export async function requireCaregiver(
   }
 }
 
-export async function requireDevice(req: NextRequest): Promise<AuthContext> {
+export async function requireDevice(
+  req: NextRequest,
+): Promise<ElderAuthSuccess | AuthFailure> {
   const token = readCookie(req, COOKIES.device)
   if (!token) return { ok: false, error: 'UNAUTHENTICATED' }
   const v = await verifyJwt<{

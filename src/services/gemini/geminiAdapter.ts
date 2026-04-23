@@ -119,7 +119,7 @@ function normalizeEntities(v: unknown): Record<string, unknown> {
 }
 
 function parseJsonBlock(text: string): RawAnalysis {
-  const cleaned = text.replace(/```json|```/g, '').trim()
+  const cleaned = text.replaceAll(/```json|```/g, '').trim()
   const start = cleaned.indexOf('{')
   const end = cleaned.lastIndexOf('}')
   const slice =
@@ -181,10 +181,7 @@ export function createRealGeminiAdapter(apiKey: string): GeminiAdapter {
         const result = await model.generateContent(parts)
         const raw = parseJsonBlock(result.response.text())
         return mapAnalysis(raw, fallback)
-      } catch (e) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.error('[GeminiAdapter] analyze failed:', e)
-        }
+      } catch {
         return {
           transcript: fallback || '(silent)',
           intent: 'UNKNOWN',

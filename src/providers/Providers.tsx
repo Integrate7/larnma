@@ -8,7 +8,7 @@ import { useState, type ReactNode } from 'react'
 import { Toaster } from 'sonner'
 import { createQueryClient } from '@/services/adapter/queryClient'
 
-export function Providers({ children }: { children: ReactNode }) {
+export function Providers({ children }: Readonly<{ children: ReactNode }>) {
   const [queryClient] = useState<QueryClient>(() => createQueryClient())
   return (
     <QueryClientProvider client={queryClient}>

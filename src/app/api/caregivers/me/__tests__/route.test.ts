@@ -98,4 +98,15 @@ describe('PATCH /api/caregivers/me', () => {
     const body = await r.json()
     expect(body.name).toBe('ชื่อใหม่')
   })
+
+  it('returns 404 when user record is deleted before update', async () => {
+    const repo = getRepository()
+    const cg = repo.createUser({ role: 'caregiver', phone: '0811', name: 'CG' })
+    const s = await issueCaregiverSession({ userId: cg.id })
+    const cookie = `${COOKIES.access}=${s.accessToken}`
+    jest.spyOn(repo, 'updateUser').mockReturnValueOnce(undefined)
+    const r = await PATCH(patchReq({ name: 'X' }, cookie))
+    expect(r.status).toBe(404)
+    jest.restoreAllMocks()
+  })
 })

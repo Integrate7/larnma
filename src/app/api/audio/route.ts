@@ -11,8 +11,6 @@ export const runtime = 'nodejs'
 export async function POST(req: NextRequest) {
   const auth = await requireDevice(req)
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: 401 })
-  if (auth.role !== 'elder')
-    return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 })
 
   // Parse multipart or JSON. For MVP, accept form-data or JSON body with a hintKeyword.
   let hintKeyword = ''

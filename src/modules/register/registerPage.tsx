@@ -66,7 +66,7 @@ export function RegisterPage() {
       {state.step === 'phone' ? <PhoneStep {...props} /> : null}
 
       {state.step === 'otp' ? (
-        <OtpStep {...props} phone={form.getValues('phone')} />
+        <OtpStep {...props} />
       ) : null}
       {state.step === 'caregiver' ? <CaregiverStep {...props} /> : null}
       {state.step === 'consent' ? <ConsentStep {...props} /> : null}

@@ -12,7 +12,7 @@ import {
 import { Skeleton } from '@/components/atom/skeleton'
 import { useElderProfileController } from './controller/controller'
 
-export function ElderProfileView({ elderId }: { elderId: string }) {
+export function ElderProfileView({ elderId }: Readonly<{ elderId: string }>) {
   const { state } = useElderProfileController(elderId)
 
   return (

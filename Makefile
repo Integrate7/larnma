@@ -3,13 +3,14 @@
 
 APP_NAME := larnma
 PORT := 3000
+SONAR_TOKEN := squ_072762198d94bec7792fb6037628097471e2d098
 
 GREEN := \033[0;32m
 YELLOW := \033[0;33m
 RED := \033[0;31m
 NC := \033[0m
 
-.PHONY: help install dev build start clean lint lint-fix test test-coverage e2e e2e-ui sonar-up sonar-down sonar-scan
+.PHONY: help install dev build start clean lint lint-fix test test-coverage e2e e2e-ui verify sonar-up sonar-down sonar-logs sonar-scan
 
 help:
 	@echo "$(GREEN)Larnma — Available Commands$(NC)"
@@ -30,10 +31,14 @@ help:
 	@echo "  make e2e           Run Playwright E2E tests"
 	@echo "  make e2e-ui        Run Playwright in UI mode"
 	@echo ""
+	@echo "$(YELLOW)Quality gate:$(NC)"
+	@echo "  make verify        Lint + type-check + unit tests with coverage"
+	@echo ""
 	@echo "$(YELLOW)SonarQube:$(NC)"
-	@echo "  make sonar-up      Start local SonarQube"
+	@echo "  make sonar-up      Start local SonarQube (http://localhost:9090)"
 	@echo "  make sonar-down    Stop local SonarQube"
-	@echo "  make sonar-scan    Run SonarQube scan"
+	@echo "  make sonar-logs    Tail SonarQube logs"
+	@echo "  make sonar-scan    Run coverage + SonarQube scan (SONAR_TOKEN=...)"
 
 install:
 	npm install
@@ -68,11 +73,23 @@ e2e:
 e2e-ui:
 	npm run test:e2e:ui
 
+verify:
+	npm run lint
+	npm run test:coverage
+
 sonar-up:
 	docker compose -f docker-compose.sonarqube.yml up -d
+	@echo ""
+	@echo "$(GREEN)SonarQube is starting on http://localhost:9090$(NC)"
+	@echo "First-run default login: admin / admin (you will be forced to change it)"
+	@echo "Then: My Account → Security → generate a token and run:"
+	@echo "  make sonar-scan SONAR_TOKEN=<your-token>"
 
 sonar-down:
 	docker compose -f docker-compose.sonarqube.yml down
+
+sonar-logs:
+	docker compose -f docker-compose.sonarqube.yml logs -f sonarqube
 
 sonar-scan:
 	@if [ -z "$(SONAR_TOKEN)" ]; then \
@@ -80,4 +97,4 @@ sonar-scan:
 		exit 1; \
 	fi
 	npm run test:coverage
-	npx sonar-scanner -Dsonar.token=$(SONAR_TOKEN)
+	npx -y sonarqube-scanner -Dsonar.token=$(SONAR_TOKEN)

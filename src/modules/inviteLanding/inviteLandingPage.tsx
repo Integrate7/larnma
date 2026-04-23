@@ -9,7 +9,7 @@ import { FormField } from '@/components/molecule/formField'
 import { OtpInput } from '@/components/molecule/otpInput'
 import { useInviteLandingController } from './controller/controller'
 
-export function InviteLandingPage({ token }: { token: string }) {
+export function InviteLandingPage({ token }: Readonly<{ token: string }>) {
   const t = useTranslations()
   const { form, state, handler } = useInviteLandingController(token)
 
@@ -38,9 +38,9 @@ export function InviteLandingPage({ token }: { token: string }) {
 
       {state.accepted ? (
         <div className="flex flex-col gap-3">
-          <p role="status" className="text-xl text-[var(--brand-ink)]">
+          <output className="text-xl text-[var(--brand-ink)]">
             ยอมรับเรียบร้อย
-          </p>
+          </output>
           <Button asChild size="xl" className="w-full">
             <Link href="/dashboard" data-testid="invite-go-dashboard">
               ไปที่แดชบอร์ด
@@ -65,17 +65,7 @@ export function InviteLandingPage({ token }: { token: string }) {
             />
           </FormField>
 
-          {!state.otpSent ? (
-            <Button
-              onClick={handler.sendOtp}
-              loading={state.submitting}
-              size="xl"
-              className="w-full"
-              data-testid="invite-send-otp"
-            >
-              ส่ง OTP
-            </Button>
-          ) : (
+          {state.otpSent ? (
             <>
               <FormField
                 label="รหัส OTP"
@@ -116,6 +106,16 @@ export function InviteLandingPage({ token }: { token: string }) {
                 {t('invite.accept')}
               </Button>
             </>
+          ) : (
+            <Button
+              onClick={handler.sendOtp}
+              loading={state.submitting}
+              size="xl"
+              className="w-full"
+              data-testid="invite-send-otp"
+            >
+              ส่ง OTP
+            </Button>
           )}
         </div>
       ) : null}

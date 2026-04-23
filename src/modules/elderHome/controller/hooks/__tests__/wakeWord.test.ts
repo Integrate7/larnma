@@ -185,4 +185,29 @@ describe('useWakeWord', () => {
     unmount()
     expect(rec.stopped).toBe(true)
   })
+
+  it('handles start() throwing gracefully', () => {
+    class ThrowSR extends MockSR {
+      start() { throw new Error('mic not available') }
+    }
+    ;(window as unknown as { SpeechRecognition: typeof ThrowSR }).SpeechRecognition = ThrowSR
+    MockSR.instances = []
+    expect(() => renderWake(() => {})).not.toThrow()
+  })
+
+  it('handles onend restart throwing gracefully', () => {
+    let callCount = 0
+    class ThrowOnSecondStart extends MockSR {
+      start() {
+        callCount++
+        if (callCount > 1) throw new Error('already started')
+        super.start()
+      }
+    }
+    ;(window as unknown as { SpeechRecognition: typeof ThrowOnSecondStart }).SpeechRecognition = ThrowOnSecondStart
+    MockSR.instances = []
+    renderWake(() => {})
+    const rec = MockSR.instances[0]
+    expect(() => act(() => { rec.handlers.onend?.() })).not.toThrow()
+  })
 })

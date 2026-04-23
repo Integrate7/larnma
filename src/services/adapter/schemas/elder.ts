@@ -21,7 +21,7 @@ export const elderBasicSchema = z.object({
   district: z.string().trim().min(1),
   province: z.string().trim().min(1),
   postalCode: z.string().trim().min(1),
-  profilePicUrl: z.string().url().optional(),
+  profilePicUrl: z.string().refine((v) => { try { return !!new URL(v) } catch { return false } }, 'Invalid URL').optional(),
 })
 
 export const elderHealthSchema = z.object({

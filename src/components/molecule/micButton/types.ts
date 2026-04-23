@@ -6,9 +6,9 @@ export type MicButtonState =
   | 'done'
   | 'error'
 
-export type MicButtonProps = {
+export type MicButtonProps = Readonly<{
   state: MicButtonState
   onPress: () => void
   disabled?: boolean
   label?: string
-}
+}>

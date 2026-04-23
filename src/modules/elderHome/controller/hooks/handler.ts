@@ -57,8 +57,8 @@ export function useElderHomeHandler(gs: GS, stopSRRef: { current: () => void }) 
   }
 
   const startVAD = (stream: MediaStream) => {
-    const w = window as WindowWithWebkitAudio
-    const AC = window.AudioContext ?? w.webkitAudioContext
+    const w = globalThis.window as WindowWithWebkitAudio
+    const AC = globalThis.window.AudioContext ?? w.webkitAudioContext
     if (!AC) return
     const ctx = new AC()
     audioCtxRef.current = ctx
@@ -74,8 +74,8 @@ export function useElderHomeHandler(gs: GS, stopSRRef: { current: () => void }) 
       if (!audioCtxRef.current) return
       analyser.getByteTimeDomainData(buf)
       let sum = 0
-      for (let i = 0; i < buf.length; i++) {
-        const v = (buf[i] - 128) / 128
+      for (const sample of buf) {
+        const v = (sample - 128) / 128
         sum += v * v
       }
       const rms = Math.sqrt(sum / buf.length)

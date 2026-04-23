@@ -15,7 +15,7 @@ import { Textarea } from '@/components/atom/textarea'
 import { FormField } from '@/components/molecule/formField'
 import { useElderProfileController } from './controller/controller'
 
-export function ElderProfileEdit({ elderId }: { elderId: string }) {
+export function ElderProfileEdit({ elderId }: Readonly<{ elderId: string }>) {
   const router = useRouter()
   const { state, handler } = useElderProfileController(elderId)
   const [allergies, setAllergies] = useState('')
@@ -63,9 +63,9 @@ export function ElderProfileEdit({ elderId }: { elderId: string }) {
         </p>
       ) : null}
       {state.saved ? (
-        <p role="status" className="text-[var(--brand-ink)]">
+        <output className="text-[var(--brand-ink)]">
           บันทึกเรียบร้อย
-        </p>
+        </output>
       ) : null}
 
       {state.data ? (
