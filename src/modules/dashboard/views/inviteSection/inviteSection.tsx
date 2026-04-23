@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/atom/card
 import { Button } from '@/components/atom/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/atom/dialog'
 import { useInviteController } from './controller/controller'
+import { CaregiverList } from './caregiverList/caregiverList'
 import type { InviteSectionProps } from './types'
 
 export function InviteSection({ elderId, isPrimary }: InviteSectionProps) {
@@ -67,6 +68,8 @@ export function InviteSection({ elderId, isPrimary }: InviteSectionProps) {
             </div>
           </DialogContent>
         </Dialog>
+
+        <CaregiverList elderId={elderId} />
       </CardContent>
     </Card>
   )
