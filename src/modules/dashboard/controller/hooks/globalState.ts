@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
 import type {
   AudioEvent,
+  ElderLocation,
   Mood,
   Notification,
   Priority,
 } from '@/shared/types'
-import type { DashboardGlobalState } from '../../types'
+import type { DashboardGlobalState, PairingInfo } from '../../types'
 import { MOODS } from '@/shared/types'
 
 export function useDashboardGlobalState() {
@@ -13,6 +14,8 @@ export function useDashboardGlobalState() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [connecting, setConnecting] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [pairings, setPairings] = useState<PairingInfo[]>([])
+  const [locations, setLocations] = useState<ElderLocation[]>([])
 
   const moodCounts = useMemo<Record<Mood, number>>(() => {
     const out = Object.fromEntries(MOODS.map((m) => [m, 0])) as Record<
@@ -29,6 +32,8 @@ export function useDashboardGlobalState() {
     moodCounts,
     connecting,
     error,
+    pairings,
+    locations,
   }
 
   const prependEvent = (e: AudioEvent) =>
@@ -59,6 +64,8 @@ export function useDashboardGlobalState() {
     state,
     setConnecting,
     setError,
+    setPairings,
+    setLocations,
     prependEvent,
     prependNotification,
     updateNotification,
