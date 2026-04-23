@@ -44,9 +44,9 @@ test.describe('Voice → DANGER event', () => {
     await expect(ackButton).toBeVisible()
     await ackButton.click()
 
-    // After ack the button should disappear (row shows "ackแล้ว")
+    // After ack the button should disappear (row shows "รับทราบแล้ว")
     await expect(
-      cgPage.getByTestId('dashboard-notis').getByText('ackแล้ว').first(),
+      cgPage.getByTestId('dashboard-notis').getByText('รับทราบแล้ว').first(),
     ).toBeVisible({ timeout: 10_000 })
   })
 })
