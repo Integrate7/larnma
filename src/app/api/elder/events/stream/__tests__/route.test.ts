@@ -49,6 +49,10 @@ describe('GET /api/elder/events/stream', () => {
     expect(r.headers.get('content-type')).toBe('text/event-stream')
     expect(r.headers.get('cache-control')).toBe('no-cache')
     expect(r.body).not.toBeNull()
-    r.body?.cancel()
+    const reader = r.body?.getReader()
+    if (reader) {
+      await reader.read()
+      await reader.cancel()
+    }
   })
 })

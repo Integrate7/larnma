@@ -100,4 +100,19 @@ describe('GET /api/elders/location', () => {
     const body = await res.json()
     expect(body.locations).toHaveLength(0)
   })
+
+  it('returns mock locations in development mode when no location recorded', async () => {
+    const orig = process.env.NODE_ENV
+    Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true, configurable: true })
+    try {
+      const { cookie } = await bootCtx()
+      const res = await GET(req(cookie))
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.locations.length).toBeGreaterThan(0)
+      expect(body.locations[0]).toHaveProperty('lat')
+    } finally {
+      Object.defineProperty(process.env, 'NODE_ENV', { value: orig, writable: true, configurable: true })
+    }
+  })
 })

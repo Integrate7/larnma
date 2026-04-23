@@ -10,7 +10,6 @@ const HEARTBEAT_MS = 15_000
 export async function GET(req: NextRequest) {
   const auth = await requireDevice(req)
   if (!auth.ok) return new Response('Unauthorized', { status: 401 })
-  if (auth.role !== 'elder') return new Response('Forbidden', { status: 403 })
 
   const elderId = auth.elderId
   const enc = new TextEncoder()

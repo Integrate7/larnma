@@ -10,7 +10,7 @@ export const DialogPortal = DialogPrimitive.Portal
 export const DialogClose = DialogPrimitive.Close
 
 export const DialogOverlay = forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Overlay>,
+  React.ComponentRef<typeof DialogPrimitive.Overlay>,
   ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(function DialogOverlay({ className, ...props }, ref) {
   return (
@@ -26,7 +26,7 @@ export const DialogOverlay = forwardRef<
 })
 
 export const DialogContent = forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Content>,
+  React.ComponentRef<typeof DialogPrimitive.Content>,
   DialogContentProps
 >(function DialogContent({ className, children, ...props }, ref) {
   return (
@@ -53,7 +53,7 @@ export const DialogContent = forwardRef<
 export function DialogHeader({
   className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+}: Readonly<React.HTMLAttributes<HTMLDivElement>>) {
   return (
     <div
       className={cn('flex flex-col gap-1.5 text-center sm:text-left', className)}
@@ -65,7 +65,7 @@ export function DialogHeader({
 export function DialogFooter({
   className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+}: Readonly<React.HTMLAttributes<HTMLDivElement>>) {
   return (
     <div
       className={cn(
@@ -78,7 +78,7 @@ export function DialogFooter({
 }
 
 export const DialogTitle = forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Title>,
+  React.ComponentRef<typeof DialogPrimitive.Title>,
   ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(function DialogTitle({ className, ...props }, ref) {
   return (
@@ -91,7 +91,7 @@ export const DialogTitle = forwardRef<
 })
 
 export const DialogDescription = forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Description>,
+  React.ComponentRef<typeof DialogPrimitive.Description>,
   ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(function DialogDescription({ className, ...props }, ref) {
   return (

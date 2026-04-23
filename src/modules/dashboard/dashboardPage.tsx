@@ -3,7 +3,7 @@
 import { AlertTriangle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import dynamic from 'next/dynamic'
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { Button } from '@/components/atom/button'
 import {
   Card,
@@ -173,6 +173,32 @@ export function DashboardPage() {
                     ).menuSuggestions ?? [])
                   : []
               const notiKey = n.id
+              let notiAction: ReactNode = null
+              if (n.ackAt) {
+                if (alreadyOrdered) {
+                  notiAction = (
+                    <span className="text-xs text-green-600">
+                      {t('food.paid')}
+                    </span>
+                  )
+                } else if (!isHungry) {
+                  notiAction = (
+                    <span className="text-xs text-muted-foreground">
+                      รับทราบแล้ว
+                    </span>
+                  )
+                }
+              } else {
+                notiAction = (
+                  <Button
+                    size="sm"
+                    onClick={() => void handler.ack(n.id)}
+                    data-testid={`ack-${n.id}`}
+                  >
+                    {t('emergency.handleIt')}
+                  </Button>
+                )
+              }
               return (
                 <li key={notiKey} className="flex flex-col gap-3 py-3">
                   <div className="flex items-center gap-3">
@@ -191,23 +217,7 @@ export function DashboardPage() {
                         n.eventId
                       )}
                     </span>
-                    {!n.ackAt ? (
-                      <Button
-                        size="sm"
-                        onClick={() => void handler.ack(n.id)}
-                        data-testid={`ack-${n.id}`}
-                      >
-                        {t('emergency.handleIt')}
-                      </Button>
-                    ) : alreadyOrdered ? (
-                      <span className="text-xs text-green-600">
-                        {t('food.paid')}
-                      </span>
-                    ) : !isHungry ? (
-                      <span className="text-xs text-muted-foreground">
-                        รับทราบแล้ว
-                      </span>
-                    ) : null}
+                    {notiAction}
                   </div>
 
                   {n.ackAt &&

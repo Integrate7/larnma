@@ -43,8 +43,7 @@ export async function POST(req: NextRequest) {
       picture: userData.picture,
       // You can also return a token if you've implemented JWT logic
     })
-  } catch (error) {
-    console.error('Google callback error:', error)
+  } catch {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }

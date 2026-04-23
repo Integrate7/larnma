@@ -81,4 +81,27 @@ describe('/api/elder/me', () => {
     const r = await GET(req(`${COOKIES.device}=${s.token}`))
     expect(r.status).toBe(404)
   })
+
+  it('returns primaryCaregiver as undefined when no primary pairing exists', async () => {
+    const repo = getRepository()
+    const elder = repo.createUser({ role: 'elder', phone: '089', name: 'ย่า' })
+    repo.createElderProfile({
+      userId: elder.id,
+      addressLine: 'a',
+      district: 'd',
+      province: 'p',
+      postalCode: '10100',
+      conditions: [],
+      symptoms: [],
+      medications: [],
+      allergies: [],
+      foodPreferences: [],
+      foodDislikes: [],
+    })
+    const s = await issueDeviceSession({ elderId: elder.id, fingerprint: 'fp' })
+    const r = await GET(req(`${COOKIES.device}=${s.token}`))
+    expect(r.status).toBe(200)
+    const body = await r.json()
+    expect(body.primaryCaregiver).toBeUndefined()
+  })
 })

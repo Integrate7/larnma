@@ -83,6 +83,18 @@ describe('/api/notifications/:id/ack', () => {
     expect(body.lockedByCaregiverId).toBe(cg.id)
   })
 
+  it('rejects cross-origin requests', async () => {
+    const r = await POST(
+      new NextRequest('http://localhost:3000/api/notifications/x/ack', {
+        method: 'POST',
+        headers: { host: 'localhost:3000', origin: 'https://evil.com', 'content-type': 'application/json' },
+        body: '{}',
+      }),
+      { params: Promise.resolve({ id: 'x' }) },
+    )
+    expect(r.status).toBe(403)
+  })
+
   it('re-ack by same caregiver remains locked=true', async () => {
     const repo = getRepository()
     const cg = repo.createUser({ role: 'caregiver', phone: '0811', name: 'C' })

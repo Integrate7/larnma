@@ -5,7 +5,7 @@ import { cn } from '@/shared/helpers/cn'
 import type { CheckboxProps } from './types'
 
 export const Checkbox = forwardRef<
-  React.ElementRef<typeof CheckboxPrimitive.Root>,
+  React.ComponentRef<typeof CheckboxPrimitive.Root>,
   CheckboxProps
 >(function Checkbox({ className, ...props }, ref) {
   return (

@@ -4,7 +4,7 @@ import { cn } from '@/shared/helpers/cn'
 import type { SwitchProps } from './types'
 
 export const Switch = forwardRef<
-  React.ElementRef<typeof SwitchPrimitive.Root>,
+  React.ComponentRef<typeof SwitchPrimitive.Root>,
   SwitchProps
 >(function Switch({ className, ...props }, ref) {
   return (

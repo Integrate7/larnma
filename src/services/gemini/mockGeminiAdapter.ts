@@ -60,7 +60,7 @@ function findRule(text: string): Rule | undefined {
 
 function extractEntities(text: string, mood: Mood): Record<string, unknown> {
   if (mood !== 'HUNGRY') return {}
-  const foodMatch = text.match(/(ข้าว[^\s,]*|ก๋วยเตี๋ยว|ส้มตำ|ผัด[^\s,]*)/)
+  const foodMatch = /(ข้าว[^\s,]*|ก๋วยเตี๋ยว|ส้มตำ|ผัด[^\s,]*)/.exec(text)
   return foodMatch ? { food: foodMatch[1] } : {}
 }
 

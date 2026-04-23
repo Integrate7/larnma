@@ -23,15 +23,19 @@ export function findAndFlagEscalations(nowMs: number = Date.now()): Notification
 
   for (const cid of noti()) caregivers.add(cid)
   for (const cid of caregivers) {
-    const list = repo.listNotificationsByCaregiver(cid, 200)
-    for (const n of list) {
-      if (n.priority !== 'critical') continue
-      if (n.escalated) continue
-      if (n.ackAt) continue
-      if (nowMs - new Date(n.createdAt).getTime() < windowMs) continue
-      const updated = repo.updateNotification(n.id, { escalated: true })
-      if (updated) out.push(updated)
-    }
+    repo
+      .listNotificationsByCaregiver(cid, 200)
+      .filter(
+        (n) =>
+          n.priority === 'critical' &&
+          !n.escalated &&
+          !n.ackAt &&
+          nowMs - new Date(n.createdAt).getTime() >= windowMs,
+      )
+      .forEach((n) => {
+        const updated = repo.updateNotification(n.id, { escalated: true })
+        if (updated) out.push(updated)
+      })
   }
   return out
 }

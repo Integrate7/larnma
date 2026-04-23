@@ -4,7 +4,7 @@ import { cn } from '@/shared/helpers/cn'
 import type { LabelProps } from './types'
 
 export const Label = forwardRef<
-  React.ElementRef<typeof LabelPrimitive.Root>,
+  React.ComponentRef<typeof LabelPrimitive.Root>,
   LabelProps
 >(function Label({ className, ...props }, ref) {
   return (

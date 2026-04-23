@@ -4,7 +4,8 @@ import { ADAPTER_CONFIG } from '@/services/adapter/config'
 const enc = new TextEncoder()
 
 function getSecret(): Uint8Array {
-  const secret = process.env.JWT_SECRET ?? 'dev-secret-larnma-change-me-00000000'
+  const secret = process.env.JWT_SECRET
+  if (!secret) throw new Error('JWT_SECRET env var is required')
   return enc.encode(secret)
 }
 
@@ -20,7 +21,7 @@ export async function signJwt(
     .setIssuedAt(now)
     .setIssuer(ADAPTER_CONFIG.jwtIssuer)
     .setExpirationTime(exp)
-    .setSubject(String(payload.sub ?? jti))
+    .setSubject(typeof payload.sub === 'string' ? payload.sub : jti)
     .sign(getSecret())
   return { token, jti, exp }
 }

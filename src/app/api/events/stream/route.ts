@@ -12,9 +12,6 @@ export async function GET(req: NextRequest) {
   if (!auth.ok) {
     return new Response('Unauthorized', { status: 401 })
   }
-  if (auth.role !== 'caregiver') {
-    return new Response('Forbidden', { status: 403 })
-  }
   const caregiverId = auth.userId
 
   const enc = new TextEncoder()

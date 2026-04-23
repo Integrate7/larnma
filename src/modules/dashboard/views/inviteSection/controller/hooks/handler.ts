@@ -22,7 +22,7 @@ export function useInviteHandler(args: { gs: GS; elderId: string }): InviteHandl
     if (res.success) {
       const absolute = res.data.url.startsWith('http')
         ? res.data.url
-        : `${window.location.origin}${res.data.url}`
+        : `${globalThis.window.location.origin}${res.data.url}`
       gs.setInviteUrl(absolute)
       gs.setOpen(true)
     } else {
@@ -44,7 +44,7 @@ export function useInviteHandler(args: { gs: GS; elderId: string }): InviteHandl
 
   const shareViaLine = () => {
     if (!gs.state.inviteUrl) return
-    window.open(
+    globalThis.window.open(
       `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(gs.state.inviteUrl)}`,
       '_blank',
     )
@@ -52,7 +52,7 @@ export function useInviteHandler(args: { gs: GS; elderId: string }): InviteHandl
 
   const shareViaSms = () => {
     if (!gs.state.inviteUrl) return
-    window.location.href = `sms:?body=${encodeURIComponent(gs.state.inviteUrl)}`
+    globalThis.window.location.href = `sms:?body=${encodeURIComponent(gs.state.inviteUrl)}`
   }
 
   return { openDialog, close, copyLink, shareViaLine, shareViaSms }

@@ -328,38 +328,39 @@ pairings        ADD COLUMN primary_transferred_at  TIMESTAMP NULL;
 
 | Layer | Technology | เหตุผล |
 |---|---|---|
-| Frontend | **Next.js 16** (App Router, Server Actions) | Latest stable, React 19, Turbopack default |
+| Frontend + Backend | **Next.js 16** (App Router, Route Handlers) | Single runtime — ทั้ง UI และ API อยู่ใน project เดียว |
 | Styling | **Tailwind CSS 4** | CSS-first config, Oxide engine, faster build |
 | UI Kit | **shadcn/ui** (Radix + Tailwind) | Copy-paste components, accessible, รวดเร็ว |
 | Mobile | **PWA** (installable, manifest + SW) | ประหยัดเวลา — ไม่ต้อง build native |
-| Backend | **NestJS** + TypeScript | Structured DI, guards, fast to scaffold |
-| Database | **PostgreSQL** + Prisma | Relational + JSONB สำหรับ mood events + type-safe |
-| Real-time | **WebSocket (Socket.IO)** | Push noti + live dashboard update |
-| AI | **Gemini 2.0 Flash** (multimodal audio) | รองรับเสียง + ไทย + ถิ่น |
+| Database | **In-memory repository** (`IRepository` interface) | Hermetic tests + zero infra; swap Prisma/PostgreSQL ใน Phase 2 |
+| Real-time | **Server-Sent Events (SSE)** via `ReadableStream` | Simpler than Socket.IO, works natively with cookie auth |
+| AI | **Gemini 2.0 Flash** (multimodal audio) via `GeminiAdapter` interface | Mock ใช้ keyword heuristics; real Gemini = one config flip |
 | Offline | **Gemma 2B** via Transformers.js (stretch) | On-device inference |
-| **Auth** | **HTTP-only cookie + JWT (access + refresh)** | XSS-safe, no localStorage, CSRF via SameSite=Lax |
-| Storage | **Supabase Storage** / S3-compatible | เก็บ audio file ชั่วคราว (24 ชม.) |
+| Auth | **HTTP-only cookie + JWT (access + refresh)** | XSS-safe, no localStorage, CSRF via SameSite=Lax |
+| Storage | Audio ประมวลผล in-memory แล้วทิ้ง | ตรงตาม PDPA 24h auto-delete โดยธรรมชาติ |
 
-### 5.1 Auth Flow (HTTP-only Cookie Concept)
+> **Phase 2 swaps (plug-in, no rewrite):** In-memory → Prisma + PostgreSQL, MockGeminiAdapter → real Gemini, SSE → Socket.IO หากต้องการ bi-directional.
+
+### 5.1 Auth Flow (HTTP-only Cookie)
 
 ```
 Login (Caregiver, Phone + OTP):
-  POST /auth/otp/send    { phone }                → { ref, exp }
-  POST /auth/otp/verify  { phone, code, ref }
-    → Server verify → issue:
+  POST /api/auth/otp/send    { phone }                → { ref, exp }
+  POST /api/auth/otp/verify  { phone, code, ref }
+    → Route Handler verify → issue:
         • access_token  (JWT, exp 15min) → Set-Cookie (HttpOnly, Secure, SameSite=Lax)
-        • refresh_token (JWT, exp 30d)   → Set-Cookie (HttpOnly, Secure, SameSite=Lax, path=/auth)
+        • refresh_token (JWT, exp 30d)   → Set-Cookie (HttpOnly, Secure, SameSite=Lax, path=/api/auth)
 
 Pairing (Elder, no login):
-  POST /pairings/consume { token, device_fingerprint }
+  POST /api/pairings/consume { token, device_fingerprint }
     → device_session cookie (HttpOnly, Secure, SameSite=Lax, exp 365d)
 
-API call (Next.js Server Action / Route Handler)
+API call (Next.js Route Handler)
   → Browser auto-attaches cookie
-  → NestJS guard verifies access_token (or device_session for elder)
-  → ถ้า expired → frontend fetches /auth/refresh → rotate tokens
+  → Guard (requireCaregiver / requireDevice) verifies JWT
+  → ถ้า expired → frontend fetches /api/auth/refresh → rotate tokens
 
-Logout → POST /auth/logout → Set-Cookie with Max-Age=0 + blacklist jti ใน Redis
+Logout → POST /api/auth/logout → Set-Cookie with Max-Age=0 + blacklist jti in-memory
 ```
 
 **Rules:**
@@ -367,7 +368,7 @@ Logout → POST /auth/logout → Set-Cookie with Max-Age=0 + blacklist jti ใ�
 - ✅ Cookie flags: `HttpOnly; Secure; SameSite=Lax`
 - ✅ CSRF: Lax cookie + server-side origin check บน mutating requests
 - ✅ Refresh token rotation ทุกครั้งที่ใช้ (detect theft)
-- ✅ WebSocket handshake ใช้ cookie เดียวกัน (no token-in-URL)
+- ✅ SSE stream ใช้ cookie เดียวกัน (no token-in-URL)
 
 ---
 
@@ -377,22 +378,24 @@ Logout → POST /auth/logout → Set-Cookie with Max-Age=0 + blacklist jti ใ�
 ┌────────────────┐         ┌────────────────┐
 │  Elder PWA     │         │ Caregiver PWA  │
 │  (Next.js)     │         │   (Next.js)    │
-│  - Wake word   │         │  - Dashboard   │
-│  - Mic button  │         │  - Noti        │
+│  - Mic button  │         │  - Dashboard   │
+│  - QR scan     │         │  - Noti        │
 └───────┬────────┘         └────────┬───────┘
-        │ audio upload              │ WebSocket
-        │ WebSocket                 │
+        │ audio upload              │ SSE (EventSource)
+        │ fetch (cookie auth)       │ fetch (cookie auth)
         ▼                           ▼
 ┌─────────────────────────────────────────┐
-│          NestJS API Gateway             │
-│  /pair  /audio  /events  /orders  /ws   │
+│     Next.js Route Handlers (same app)   │
+│  /api/audio  /api/elder/events/stream   │
+│  /api/pairings  /api/orders  /api/auth  │
 └──┬──────────┬────────┬──────────┬───────┘
    │          │        │          │
    ▼          ▼        ▼          ▼
-┌──────┐ ┌────────┐ ┌──────┐ ┌──────────┐
-│Gemini│ │Postgres│ │Mock  │ │Mock Point│
-│ API  │ │        │ │Food  │ │ Service  │
-└──────┘ └────────┘ └──────┘ └──────────┘
+┌──────────┐ ┌──────────────┐ ┌──────┐ ┌──────────┐
+│GeminiAda-│ │In-memory     │ │Mock  │ │Mock Point│
+│pter      │ │Repository    │ │Food  │ │ Service  │
+│(mock/real)│ │(IRepository) │ │      │ │          │
+└──────────┘ └──────────────┘ └──────┘ └──────────┘
 ```
 
 ---

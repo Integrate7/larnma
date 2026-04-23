@@ -27,8 +27,14 @@ export async function POST(req: NextRequest) {
 
   const v = await verifyOtp(body)
   if (!v.success) {
-    const status =
-      v.error === 'LOCKED' ? 429 : v.error === 'EXPIRED' ? 410 : 401
+    let status: number
+    if (v.error === 'LOCKED') {
+      status = 429
+    } else if (v.error === 'EXPIRED') {
+      status = 410
+    } else {
+      status = 401
+    }
     return NextResponse.json({ error: v.error, errorCode: v.error }, { status })
   }
 

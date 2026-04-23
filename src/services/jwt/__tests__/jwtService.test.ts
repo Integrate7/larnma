@@ -32,4 +32,22 @@ describe('jwtService', () => {
     const v = await verifyJwt(token)
     expect(v.valid).toBe(false)
   })
+
+  it('throws when JWT_SECRET env var is missing', async () => {
+    const orig = process.env.JWT_SECRET
+    delete process.env.JWT_SECRET
+    try {
+      await expect(signJwt({ sub: 'u1' }, 60)).rejects.toThrow('JWT_SECRET env var is required')
+    } finally {
+      process.env.JWT_SECRET = orig
+    }
+  })
+
+  it('rejects non-string error in verifyJwt', async () => {
+    const v = await verifyJwt('not.a.valid.jwt.at.all')
+    expect(v.valid).toBe(false)
+    if (!v.valid) {
+      expect(typeof v.error).toBe('string')
+    }
+  })
 })

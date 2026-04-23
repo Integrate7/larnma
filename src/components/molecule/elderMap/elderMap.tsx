@@ -15,9 +15,9 @@ const markerIcon = L.icon({
   popupAnchor: [1, -34],
 })
 
-export type ElderMapProps = {
+export type ElderMapProps = Readonly<{
   locations: ElderLocation[]
-}
+}>
 
 export function ElderMap({ locations }: ElderMapProps) {
   const t = useTranslations('caregiver.dashboard')

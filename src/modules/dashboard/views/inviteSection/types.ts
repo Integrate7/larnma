@@ -1,7 +1,7 @@
-export type InviteSectionProps = {
+export type InviteSectionProps = Readonly<{
   elderId: string
   isPrimary: boolean
-}
+}>
 
 export type InviteGlobalState = {
   open: boolean

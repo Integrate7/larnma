@@ -1,5 +1,5 @@
 export type ActionResult<T> =
-  | { success: true; data: T; error: null; errorCode?: undefined }
+  | { success: true; data: T; error: null; errorCode?: string }
   | { success: false; data: null; error: string; errorCode?: string }
 
 export const ok = <T>(data: T): ActionResult<T> => ({

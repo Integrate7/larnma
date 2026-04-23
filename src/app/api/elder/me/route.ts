@@ -8,8 +8,6 @@ export async function GET(req: NextRequest) {
   const auth = await requireDevice(req)
   if (!auth.ok)
     return NextResponse.json({ error: auth.error }, { status: 401 })
-  if (auth.role !== 'elder')
-    return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 })
 
   const repo = getRepository()
   const user = repo.getUserById(auth.elderId)

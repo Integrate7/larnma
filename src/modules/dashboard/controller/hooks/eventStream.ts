@@ -9,8 +9,8 @@ type GS = ReturnType<typeof useDashboardGlobalState>
  */
 export function useDashboardEventStream(gs: GS) {
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    const Ctor = (window as unknown as { EventSource?: typeof EventSource })
+    if (globalThis.window === undefined) return
+    const Ctor = (globalThis.window as unknown as { EventSource?: typeof EventSource })
       .EventSource
     if (!Ctor) {
       gs.setConnecting(false)
@@ -22,7 +22,7 @@ export function useDashboardEventStream(gs: GS) {
     es.onerror = () => gs.setError('ขาดการเชื่อมต่อ')
     es.onmessage = (msg) => {
       try {
-        const parsed = JSON.parse((msg as MessageEvent).data) as {
+        const parsed = JSON.parse(msg.data) as {
           kind: string
           event?: unknown
           notification?: unknown

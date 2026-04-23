@@ -33,8 +33,8 @@ type WindowWithSR = Window & {
 }
 
 function getSRCtor(): SRCtor | undefined {
-  if (typeof window === 'undefined') return undefined
-  const w = window as WindowWithSR
+  if (globalThis.window === undefined) return undefined
+  const w = globalThis.window as WindowWithSR
   return w.SpeechRecognition ?? w.webkitSpeechRecognition
 }
 
@@ -42,17 +42,7 @@ export function useWakeWord(gs: GS, onWake: () => void) {
   const onWakeRef = useRef(onWake)
   onWakeRef.current = onWake
   const srRef = useRef<SRLike | null>(null)
-  const [supported] = useState<boolean>(() => {
-    const ok = !!getSRCtor()
-    if (typeof window !== 'undefined') {
-      console.log(
-        '[WakeWord] SpeechRecognition supported:',
-        ok,
-        ok ? '' : '(Firefox/iOS may not support, fallback to tap)',
-      )
-    }
-    return ok
-  })
+  const [supported] = useState<boolean>(() => !!getSRCtor())
   const { setMicState } = gs
   const { micState } = gs.gs
 
@@ -78,40 +68,31 @@ export function useWakeWord(gs: GS, onWake: () => void) {
     rec.lang = 'th-TH'
     rec.maxAlternatives = 1
 
-    rec.onstart = () => { console.log('[WakeWord] onstart (th-TH)') }
-    rec.onaudiostart = () => { console.log('[WakeWord] onaudiostart (mic capturing)') }
-    rec.onsoundstart = () => { console.log('[WakeWord] onsoundstart') }
-    rec.onspeechstart = () => { console.log('[WakeWord] onspeechstart') }
-    rec.onspeechend = () => { console.log('[WakeWord] onspeechend') }
-    rec.onnomatch = () => { console.log('[WakeWord] onnomatch') }
+    rec.onstart = null
+    rec.onaudiostart = null
+    rec.onsoundstart = null
+    rec.onspeechstart = null
+    rec.onspeechend = null
+    rec.onnomatch = null
     rec.onresult = (e: SREvent) => {
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const text = e.results[i][0].transcript
-        const isFinal = e.results[i].isFinal
-        console.log('[WakeWord] heard:', JSON.stringify(text), isFinal ? '(final)' : '(interim)')
         if (KEYWORD_RE.test(text)) {
-          console.log('[WakeWord] ✓ keyword matched → triggering onWake')
           onWakeRef.current()
           break
         }
       }
     }
-    rec.onerror = (e: SRErrorEvent) => {
-      console.warn('[WakeWord] error:', e?.error ?? e?.message ?? e)
-    }
+    rec.onerror = null
     rec.onend = () => {
-      // If stopped externally (srRef cleared) or by cleanup, don't restart
       if (srRef.current !== rec) return
-      console.log('[WakeWord] onend — restarting')
-      try { rec.start() } catch (err) { console.warn('[WakeWord] restart failed:', err) }
+      try { rec.start() } catch { /* ignore restart failure */ }
     }
 
     try {
       rec.start()
       setMicState('wakeListening')
-    } catch (err) {
-      console.warn('[WakeWord] start() threw:', err)
-    }
+    } catch { /* ignore if SR unavailable */ }
 
     return () => {
       srRef.current = null

@@ -45,7 +45,7 @@ export function QrImageUpload({
       ]
 
       let resultText = ''
-      let lastError: any = null
+      let lastError: unknown = null
 
       for (const attempt of decodeAttempts) {
         try {
@@ -58,13 +58,11 @@ export function QrImageUpload({
       }
 
       if (resultText) {
-        console.log('QR decoded successfully:', resultText)
         onDecode(resultText)
       } else {
         throw lastError || new Error('Not found')
       }
-    } catch (e) {
-      console.error('QR decode error after all attempts:', e)
+    } catch {
       onError?.(new Error(t('pair.invalidQr')))
     } finally {
       setLoading(false)
@@ -90,11 +88,9 @@ export function QrImageUpload({
         height *= maxDim / width
         width = maxDim
       }
-    } else {
-      if (height > maxDim) {
-        width *= maxDim / height
-        height = maxDim
-      }
+    } else if (height > maxDim) {
+      width *= maxDim / height
+      height = maxDim
     }
 
     canvas.width = width

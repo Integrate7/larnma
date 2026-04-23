@@ -11,19 +11,17 @@ export function useElderHomeGlobalState() {
   const [lastResult, setLastResult] = useState<AudioUploadResult | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [orderNotification, setOrderNotification] = useState<OrderNotification | null>(null)
-  const [isOnline, setIsOnline] = useState(
-    typeof navigator !== 'undefined' ? navigator.onLine : true,
-  )
+  const [isOnline, setIsOnline] = useState(true)
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    setIsOnline(navigator.onLine)
     const on = () => setIsOnline(true)
     const off = () => setIsOnline(false)
-    window.addEventListener('online', on)
-    window.addEventListener('offline', off)
+    globalThis.window.addEventListener('online', on)
+    globalThis.window.addEventListener('offline', off)
     return () => {
-      window.removeEventListener('online', on)
-      window.removeEventListener('offline', off)
+      globalThis.window.removeEventListener('online', on)
+      globalThis.window.removeEventListener('offline', off)
     }
   }, [])
 

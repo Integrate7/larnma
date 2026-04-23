@@ -5,7 +5,7 @@ import { cn } from '@/shared/helpers/cn'
 import type { RadioGroupItemProps, RadioGroupProps } from './types'
 
 export const RadioGroup = forwardRef<
-  React.ElementRef<typeof RadioGroupPrimitive.Root>,
+  React.ComponentRef<typeof RadioGroupPrimitive.Root>,
   RadioGroupProps
 >(function RadioGroup({ className, ...props }, ref) {
   return (
@@ -18,7 +18,7 @@ export const RadioGroup = forwardRef<
 })
 
 export const RadioGroupItem = forwardRef<
-  React.ElementRef<typeof RadioGroupPrimitive.Item>,
+  React.ComponentRef<typeof RadioGroupPrimitive.Item>,
   RadioGroupItemProps
 >(function RadioGroupItem({ className, ...props }, ref) {
   return (

@@ -10,7 +10,7 @@ export function useRegisterHandler(args: {
   gs: GS
   navigate?: (url: string) => void
 }): RegisterHandler {
-  const { form, gs, navigate = (url) => window.location.assign(url) } = args
+  const { form, gs, navigate = (url) => globalThis.window.location.assign(url) } = args
 
   const setBusy = (b: boolean) => gs.setSubmitting(b)
   const setErr = (m: string | null) => gs.setErrorMessage(m)

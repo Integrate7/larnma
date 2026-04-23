@@ -36,18 +36,26 @@ function ListeningBars() {
 export function MicButton({ state, onPress, disabled, label }: MicButtonProps) {
   const shownLabel = label ?? LABEL_DEFAULT[state]
 
-  const circleBg =
-    state === 'error'
-      ? 'radial-gradient(circle at 40% 35%, oklch(0.58 0.2 28), oklch(0.4 0.2 28))'
-      : state === 'done'
-        ? 'radial-gradient(circle at 40% 35%, var(--ok), oklch(0.38 0.12 160))'
-        : 'radial-gradient(circle at 40% 35%, oklch(0.52 0.2 300), oklch(0.32 0.2 300))'
+  let circleBg: string
+  if (state === 'error') {
+    circleBg = 'radial-gradient(circle at 40% 35%, oklch(0.58 0.2 28), oklch(0.4 0.2 28))'
+  } else if (state === 'done') {
+    circleBg = 'radial-gradient(circle at 40% 35%, var(--ok), oklch(0.38 0.12 160))'
+  } else {
+    circleBg = 'radial-gradient(circle at 40% 35%, oklch(0.52 0.2 300), oklch(0.32 0.2 300))'
+  }
 
   const ringShadow =
     '0 0 0 6px color-mix(in oklch, var(--brand) 14%, transparent), 0 0 0 14px color-mix(in oklch, var(--brand) 6%, transparent)'
 
-  const Icon =
-    state === 'uploading' ? Loader2 : state === 'error' ? MicOff : Mic
+  let Icon: typeof Mic | typeof MicOff | typeof Loader2
+  if (state === 'uploading') {
+    Icon = Loader2
+  } else if (state === 'error') {
+    Icon = MicOff
+  } else {
+    Icon = Mic
+  }
 
   return (
     <div className="flex flex-col items-center gap-3">

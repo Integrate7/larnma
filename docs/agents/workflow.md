@@ -4,7 +4,7 @@ Standard workflow for Claude AI to develop, implement features, fix bugs, and ha
 
 **Flow**: Research → Plan → `/implement` → `/self-review` → `/ship`
 
-- `/implement` — classifies the task (feat/fix/...) with the user, checks the branch, drafts a plan file under `docs/plans/` for approval, then guides you through the right checklist. Rules: [`skills/implement.md`](./skills/implement.md).
+- `/implement` — classifies the task (feat/fix/...) with the user, checks the branch, drafts a plan file under `docs/superpowers/plans/` for approval, then guides you through the right checklist. Rules: [`skills/implement.md`](./skills/implement.md).
 - `/verify` — pre-commit gate: lint + unit + coverage ≥ 80% + build + SonarQube. Also runs automatically via the Stop-hook when `src/` files change. Rules: [`skills/verify.md`](./skills/verify.md).
 - `/self-review` — audits the diff against rules A1–E5 before ship. Rules: [`skills/self-review.md`](./skills/self-review.md).
 - `/review-pr <N>` — reviews a teammate's PR using the same A1–E5 rule set (plus F1–F4 PR-meta checks). Reports findings; never approves/merges. Rules: [`skills/review-pr.md`](./skills/review-pr.md).
@@ -61,7 +61,7 @@ Read docs/agents/context/02-controller-view-pattern.md    # Primary pattern
 | Reviewing a teammate's PR (`/review-pr`) | `skills/review-pr.md` |
 | Authoring a commit (`/commit`) | `skills/commit.md` |
 | Shipping / opening a PR (`/ship`) | `skills/ship.md` |
-| Product scope / specs / plans | `docs/mvp/mvp.md`, `docs/plans/` |
+| Product scope / specs / plans | `docs/mvp/mvp.md`, `docs/superpowers/plans/` |
 
 ### 2.3 Read the relevant source code
 
@@ -73,15 +73,15 @@ Read docs/agents/context/02-controller-view-pattern.md    # Primary pattern
 
 ## 3. Plan — Write a Plan File Before Implementing
 
-All non-trivial `/implement` invocations MUST produce a plan file under [`docs/plans/`](../plans/) BEFORE any production code is written. This is enforced by `/implement` Step 3 — see [`skills/implement.md §3`](./skills/implement.md) for the template and confirmation loop.
+All non-trivial `/implement` invocations MUST produce a plan file under [`docs/superpowers/plans/`](../plans/) BEFORE any production code is written. This is enforced by `/implement` Step 3 — see [`skills/implement.md §3`](./skills/implement.md) for the template and confirmation loop.
 
 ### 3.1 File location
 
 ```
-docs/plans/<YYYY-MM-DD>-<kebab-slug>.md
+docs/superpowers/plans/<YYYY-MM-DD>-<kebab-slug>.md
 ```
 
-Example: `docs/plans/2026-04-20-workflow-export-dialog.md`
+Example: `docs/superpowers/plans/2026-04-20-workflow-export-dialog.md`
 
 ### 3.2 When required
 
@@ -132,7 +132,7 @@ It will:
 
 1. Ask you to classify the task (feat / fix / enhance / refactor / chore / docs / test / perf / ci / build) — it refuses to assume
 2. Verify your branch prefix matches the chosen type (and will block `main` / `dev`)
-3. **Draft a plan file** under `docs/plans/<YYYY-MM-DD>-<slug>.md` and wait for your approval before touching production code
+3. **Draft a plan file** under `docs/superpowers/plans/<YYYY-MM-DD>-<slug>.md` and wait for your approval before touching production code
 4. Load the right checklist for that type and guide you through it
 
 You can pass the type as an argument to skip Step 1: `/implement feat`, `/implement fix`, etc.
