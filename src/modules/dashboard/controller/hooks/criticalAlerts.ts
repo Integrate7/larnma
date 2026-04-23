@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type { AudioEvent, Notification } from '@/shared/types'
 import type {
   CriticalAlertCase,
@@ -15,15 +15,16 @@ export function useCriticalAlerts(
   primaryElder: PrimaryElder,
   ackFn: (notificationId: string) => Promise<void>,
 ): CriticalAlertState & CriticalAlertHandler {
-  const shownCaseIdsRef = useRef<Set<string>>(new Set())
-  const [shownVersion, bumpShownVersion] = useState(0)
+  const [shownCaseIds, setShownCaseIds] = useState<Set<string>>(
+    () => new Set(),
+  )
 
   const cases = useMemo<CriticalAlertCase[]>(() => {
     const out: CriticalAlertCase[] = []
     for (const n of notifications) {
       if (n.priority !== 'critical' && n.priority !== 'high') continue
       if (n.ackAt) continue
-      if (shownCaseIdsRef.current.has(n.id)) continue
+      if (shownCaseIds.has(n.id)) continue
       const ev = events.find((e) => e.id === n.eventId)
       out.push({
         id: n.id,
@@ -35,9 +36,7 @@ export function useCriticalAlerts(
       })
     }
     return out
-    // shownVersion is bumped by markCurrentAsShown to invalidate this memo
-    // whenever shownCaseIdsRef mutates (refs alone don't retrigger memos).
-  }, [notifications, events, shownVersion])
+  }, [notifications, events, shownCaseIds])
 
   const tone: CriticalAlertState['tone'] = cases.some(
     (c) => c.priority === 'critical',
@@ -49,8 +48,13 @@ export function useCriticalAlerts(
   const elderPhone = primaryElder?.phone ?? null
 
   const markCurrentAsShown = useCallback(() => {
-    for (const c of cases) shownCaseIdsRef.current.add(c.id)
-    bumpShownVersion((v) => v + 1)
+    const ids = cases.map((c) => c.id)
+    if (ids.length === 0) return
+    setShownCaseIds((prev) => {
+      const next = new Set(prev)
+      for (const id of ids) next.add(id)
+      return next
+    })
   }, [cases])
 
   const onClose = useCallback(() => {
