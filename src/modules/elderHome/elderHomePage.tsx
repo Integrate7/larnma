@@ -40,13 +40,11 @@ export function ElderHomePage() {
         </p>
       ) : null}
 
-      {!state.isOnline ? (
-        <Button asChild size="xl" variant="destructive">
-          <a href="tel:1669" data-testid="elder-offline-call">
-            {t('emergency.call1669')}
-          </a>
-        </Button>
-      ) : null}
+      <Button asChild size="xl" variant="destructive">
+        <a href="tel:0863780740" data-testid="elder-emergency-call">
+          {t('emergency.call1669')}
+        </a>
+      </Button>
     </main>
   )
 }
