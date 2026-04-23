@@ -7,6 +7,12 @@ import { PriorityBadge } from '@/components/molecule/priorityBadge'
 import { Button } from '@/components/atom/button'
 import { useDashboardController } from './controller/controller'
 import type { Mood } from '@/shared/types'
+import dynamic from 'next/dynamic'
+
+const ElderMap = dynamic(
+  () => import('@/components/molecule/elderMap').then((m) => m.ElderMap),
+  { ssr: false },
+)
 
 export function DashboardPage() {
   const t = useTranslations()
@@ -98,6 +104,15 @@ export function DashboardPage() {
               </li>
             ))}
           </ul>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>ที่อยู่ปัจจุบัน</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ElderMap locations={state.locations} />
         </CardContent>
       </Card>
 
