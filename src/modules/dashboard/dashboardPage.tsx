@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/atom/card'
+import { Card } from '@/components/atom/card'
 import { MoodChip } from '@/components/molecule/moodChip'
 import { PriorityBadge } from '@/components/molecule/priorityBadge'
 import { Button } from '@/components/atom/button'
@@ -14,135 +14,176 @@ export function DashboardPage() {
   const latest = state.events[0]
 
   return (
-    <main className="mx-auto flex max-w-4xl flex-col gap-4 p-6">
-      <h1 className="text-3xl font-bold">{t('caregiver.dashboard.title')}</h1>
+    <main className="mx-auto flex max-w-2xl flex-col gap-5 px-5 py-6">
+      <header className="flex items-baseline justify-between">
+        <div>
+          <div className="mono-label">{t('caregiver.dashboard.title')}</div>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+            คุณแม่วันนี้
+          </h1>
+        </div>
+        <div
+          className="grid h-8 w-8 place-items-center rounded-full text-xs font-semibold text-white"
+          style={{ background: 'var(--brand)' }}
+        >
+          ห
+        </div>
+      </header>
 
       {state.error ? (
-        <p role="alert" className="text-destructive">
+        <p
+          role="alert"
+          className="rounded-md border border-[color-mix(in_oklch,var(--danger)_35%,var(--rule))] bg-[var(--danger-wash)] p-3 text-sm text-[var(--danger)]"
+        >
           {state.error}
         </p>
       ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('caregiver.dashboard.latestStatus')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {latest ? (
-            <div
-              className="flex flex-col gap-2"
-              data-testid="dashboard-latest"
-            >
-              <div className="flex items-center gap-2">
-                <MoodChip mood={latest.mood} />
-                <span className="text-sm text-muted-foreground">
-                  {new Date(latest.createdAt).toLocaleString('th-TH')}
-                </span>
-              </div>
-              <p className="text-lg">{latest.summary}</p>
-              <p className="text-sm text-muted-foreground">
-                "{latest.transcript}"
-              </p>
-            </div>
-          ) : (
-            <p className="text-muted-foreground">
-              {t('caregiver.dashboard.empty')}
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('caregiver.dashboard.timeline')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul
-            className="flex flex-col divide-y"
-            data-testid="dashboard-timeline"
-          >
-            {state.events.map((e) => (
-              <li key={e.id} className="flex items-center gap-3 py-2">
-                <MoodChip mood={e.mood} />
-                <span className="flex-1 text-sm">{e.summary}</span>
-                <span className="text-xs text-muted-foreground">
-                  {new Date(e.createdAt).toLocaleTimeString('th-TH')}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>การแจ้งเตือน</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="flex flex-col divide-y" data-testid="dashboard-notis">
-            {state.notifications.map((n) => {
-              const event = state.events.find((e) => e.id === n.eventId)
-              const isHungry = event?.intent === 'HUNGRY'
-              const alreadyOrdered = event ? state.orderedEventIds.includes(event.id) : false
-              const notiKey = n.id
-              return (
-                <li key={notiKey} className="flex items-center gap-3 py-2">
-                  <PriorityBadge priority={n.priority} />
-                  <span className="flex-1 text-sm">
-                    {event?.summary ?? n.eventId}
-                    {isHungry && event ? (
-                      <span className="ml-2 text-muted-foreground">
-                        ฿{(event.entities as { price?: number }).price ?? '-'}
-                      </span>
-                    ) : null}
-                  </span>
-                  {!n.ackAt ? (
-                    <Button
-                      size="sm"
-                      onClick={() => void handler.ack(n.id)}
-                      data-testid={`ack-${n.id}`}
-                    >
-                      {t('emergency.handleIt')}
-                    </Button>
-                  ) : isHungry && !alreadyOrdered ? (
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => void handler.order(n, state.events)}
-                      data-testid={`order-${n.id}`}
-                    >
-                      {t('food.pay')}
-                    </Button>
-                  ) : alreadyOrdered ? (
-                    <span className="text-xs text-green-600">{t('food.paid')}</span>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">ackแล้ว</span>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('caregiver.dashboard.weeklyMood')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-3">
-            {(Object.keys(state.moodCounts) as Mood[]).map((m) => (
-              <div
-                key={m}
-                className="flex items-center gap-2 rounded-md bg-muted px-3 py-1.5 text-sm"
-              >
-                <MoodChip mood={m} />
-                <span>{state.moodCounts[m]}</span>
-              </div>
-            ))}
+      {/* Stat grid */}
+      <div className="grid grid-cols-2 gap-2">
+        <Card className="p-3">
+          <div className="mono-label">Mood</div>
+          <div className="mt-1 text-base font-semibold tracking-tight">
+            {state.events[0]?.mood ?? 'ปกติ'}
           </div>
-        </CardContent>
-      </Card>
+        </Card>
+        <Card className="p-3">
+          <div className="mono-label">Events</div>
+          <div className="mt-1 text-base font-semibold tracking-tight">
+            {state.events.length} ครั้ง
+          </div>
+        </Card>
+      </div>
+
+      {/* Latest event */}
+      <section className="flex flex-col gap-2">
+        <div className="mono-label">
+          {t('caregiver.dashboard.latestStatus')}
+        </div>
+        {latest ? (
+          <Card accent="log" className="p-3" data-testid="dashboard-latest">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="mono-label">
+                  {new Date(latest.createdAt).toLocaleTimeString('th-TH', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+                <MoodChip mood={latest.mood} />
+              </div>
+              <span className="mono-label">latest</span>
+            </div>
+            <p className="mt-2 text-sm leading-snug text-[var(--ink)]">
+              "{latest.transcript}"
+            </p>
+            <p className="mt-1 serif-caption">{latest.summary}</p>
+          </Card>
+        ) : (
+          <p className="serif-caption">{t('caregiver.dashboard.empty')}</p>
+        )}
+      </section>
+
+      {/* Timeline */}
+      <section className="flex flex-col gap-2" data-testid="dashboard-timeline">
+        <div className="mono-label">{t('caregiver.dashboard.timeline')}</div>
+        {state.events.map((e) => (
+          <Card key={e.id} accent="log" className="p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="mono-label">
+                  {new Date(e.createdAt).toLocaleTimeString('th-TH', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+                <MoodChip mood={e.mood} />
+              </div>
+              <span className="mono-label">log</span>
+            </div>
+            <p className="mt-2 text-sm leading-snug text-[var(--ink)]">
+              "{e.transcript}"
+            </p>
+            <p className="mt-1 serif-caption">{e.summary}</p>
+          </Card>
+        ))}
+      </section>
+
+      {/* Notifications - PRESERVES the food-order logic */}
+      <section className="flex flex-col gap-2" data-testid="dashboard-notis">
+        <div className="mono-label">การแจ้งเตือน</div>
+        {state.notifications.map((n) => {
+          const event = state.events.find((e) => e.id === n.eventId)
+          const isHungry = event?.intent === 'HUNGRY'
+          const alreadyOrdered = event
+            ? state.orderedEventIds.includes(event.id)
+            : false
+          return (
+            <Card
+              key={n.id}
+              accent={n.priority === 'critical' ? 'crit' : 'normal'}
+              className="p-3"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-1 items-center gap-2">
+                  <PriorityBadge priority={n.priority} />
+                  <span className="text-sm text-[var(--ink)]">
+                    {event?.summary ?? n.eventId}
+                  </span>
+                  {isHungry && event ? (
+                    <span className="mono-label">
+                      ฿{(event.entities as { price?: number }).price ?? '-'}
+                    </span>
+                  ) : null}
+                </div>
+                {!n.ackAt ? (
+                  <Button
+                    size="sm"
+                    onClick={() => void handler.ack(n.id)}
+                    data-testid={`ack-${n.id}`}
+                  >
+                    {t('emergency.handleIt')}
+                  </Button>
+                ) : isHungry && !alreadyOrdered ? (
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={() => void handler.order(n, state.events)}
+                    data-testid={`order-${n.id}`}
+                  >
+                    {t('food.pay')}
+                  </Button>
+                ) : alreadyOrdered ? (
+                  <span
+                    className="mono-label"
+                    style={{ color: 'var(--ok)' }}
+                  >
+                    {t('food.paid')}
+                  </span>
+                ) : (
+                  <span className="mono-label">ackแล้ว</span>
+                )}
+              </div>
+            </Card>
+          )
+        })}
+      </section>
+
+      {/* Weekly mood */}
+      <section className="flex flex-col gap-2">
+        <div className="mono-label">{t('caregiver.dashboard.weeklyMood')}</div>
+        <div className="flex flex-wrap gap-3">
+          {(Object.keys(state.moodCounts) as Mood[]).map((m) => (
+            <div
+              key={m}
+              className="flex items-center gap-2 rounded-md border border-[var(--rule)] bg-white px-3 py-1.5"
+            >
+              <MoodChip mood={m} />
+              <span className="font-mono text-sm">{state.moodCounts[m]}</span>
+            </div>
+          ))}
+        </div>
+      </section>
     </main>
   )
 }
