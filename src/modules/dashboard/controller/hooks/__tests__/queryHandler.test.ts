@@ -66,4 +66,18 @@ describe('useDashboardQueryHandler', () => {
       expect(result.current.gs.state.pairings).toHaveLength(1)
     })
   })
+
+  it('fetches each endpoint exactly once on mount (no refetch loop)', async () => {
+    // Every load() call writes to gs (replaceAll/setError/setLocations/setPairings),
+    // which re-renders the hook. With unstable deps the effect would refire the
+    // fetch trio on every rerender. Assert we stopped at one round = 3 calls.
+    mockFetch(200, { events: [], notifications: [] })
+    const { result } = renderAll()
+    await waitFor(() => {
+      expect(result.current.gs.state.error).toBe(null)
+    })
+    // Allow any looping effect a chance to fire.
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    expect((global.fetch as jest.Mock).mock.calls.length).toBe(3)
+  })
 })
