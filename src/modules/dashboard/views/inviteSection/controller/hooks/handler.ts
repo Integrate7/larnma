@@ -10,6 +10,7 @@ export function useInviteHandler(args: { gs: GS; elderId: string }): InviteHandl
   const { gs, elderId } = args
 
   const openDialog = async () => {
+    if (!elderId) return
     gs.setLoading(true)
     gs.setError(null)
     const res = await fetcher(
@@ -19,7 +20,9 @@ export function useInviteHandler(args: { gs: GS; elderId: string }): InviteHandl
     )
     gs.setLoading(false)
     if (res.success) {
-      const absolute = `${window.location.origin}${res.data.url}`
+      const absolute = res.data.url.startsWith('http')
+        ? res.data.url
+        : `${window.location.origin}${res.data.url}`
       gs.setInviteUrl(absolute)
       gs.setOpen(true)
     } else {
@@ -30,6 +33,7 @@ export function useInviteHandler(args: { gs: GS; elderId: string }): InviteHandl
   const close = () => {
     gs.setOpen(false)
     gs.setCopied(false)
+    gs.setInviteUrl(null)
   }
 
   const copyLink = async () => {
