@@ -72,7 +72,7 @@ export function DashboardPage() {
         <div>
           <div className="mono-label">{t('caregiver.dashboard.title')}</div>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-            คุณแม่วันนี้
+            {primary?.elderName ? `คุณ${primary.elderName}วันนี้` : 'วันนี้'}
           </h1>
         </div>
         <div
