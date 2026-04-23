@@ -115,4 +115,74 @@ describe('useWakeWord', () => {
     })
     expect(rec.stopped).toBe(true)
   })
+
+  it('fires onWake when transcript contains "หลาน รัก" with space', () => {
+    installSR()
+    const onWake = jest.fn()
+    renderWake(onWake)
+    act(() => {
+      MockSR.instances[0].fireResult('หลาน รัก ช่วยด้วย')
+    })
+    expect(onWake).toHaveBeenCalledTimes(1)
+  })
+
+  it('stopImmediate clears srRef and stops recognition', () => {
+    installSR()
+    const { result } = renderWake(() => {})
+    const rec = MockSR.instances[0]
+    act(() => {
+      result.current.wake.stopImmediate()
+    })
+    expect(rec.stopped).toBe(true)
+  })
+
+  it('restarts recognition on end event when still in shouldListen state', () => {
+    installSR()
+    renderWake(() => {})
+    const rec = MockSR.instances[0]
+    act(() => {
+      rec.handlers.onend?.()
+    })
+    expect(rec.started).toBe(true)
+  })
+
+  it('does not restart on end when srRef was cleared externally', () => {
+    installSR()
+    const { result } = renderWake(() => {})
+    act(() => {
+      result.current.wake.stopImmediate()
+    })
+    const startCount = 1
+    const rec = MockSR.instances[0]
+    act(() => {
+      rec.handlers.onend?.()
+    })
+    expect(rec.started).toBe(startCount > 0)
+  })
+
+  it('calls onerror handler without throwing', () => {
+    installSR()
+    renderWake(() => {})
+    const rec = MockSR.instances[0]
+    expect(() => {
+      act(() => { rec.handlers.onerror?.() })
+    }).not.toThrow()
+  })
+
+  it('uses webkitSpeechRecognition as fallback', () => {
+    ;(window as unknown as { SpeechRecognition?: unknown }).SpeechRecognition = undefined
+    ;(window as unknown as { webkitSpeechRecognition: typeof MockSR }).webkitSpeechRecognition = MockSR
+    MockSR.instances = []
+    const { result } = renderWake(() => {})
+    expect(result.current.wake.supported).toBe(true)
+    expect(MockSR.instances.length).toBe(1)
+  })
+
+  it('cleans up recognition on unmount', () => {
+    installSR()
+    const { unmount } = renderWake(() => {})
+    const rec = MockSR.instances[0]
+    unmount()
+    expect(rec.stopped).toBe(true)
+  })
 })

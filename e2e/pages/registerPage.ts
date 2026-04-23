@@ -9,6 +9,8 @@ export class RegisterPage {
 
   async start() {
     await this.page.getByTestId('welcome-next').click()
+    // Choice step: click "ลงทะเบียนปกติ" to proceed to phone step
+    await this.page.getByRole('button', { name: 'ลงทะเบียนปกติ' }).click()
   }
 
   async fillPhoneAndSend(phone: string) {

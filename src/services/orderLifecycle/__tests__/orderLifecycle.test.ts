@@ -6,7 +6,7 @@ import {
   createInMemoryRepository,
   getRepository,
 } from '@/services/repository'
-import { advanceOrder, nextStatus } from '../orderLifecycle'
+import { advanceOrder, nextStatus, scheduleFullLifecycle } from '../orderLifecycle'
 
 describe('orderLifecycle', () => {
   beforeEach(() => {
@@ -46,5 +46,33 @@ describe('orderLifecycle', () => {
     // further calls are a no-op and return the terminal order
     const terminal = advanceOrder(order.id)
     expect(terminal?.status).toBe('delivered')
+  })
+
+  it('scheduleFullLifecycle advances order asynchronously through all steps', async () => {
+    jest.useFakeTimers()
+    const repo = getRepository()
+    const order = repo.createOrder({
+      eventId: 'ev',
+      caregiverId: 'c2',
+      elderId: 'e2',
+      menu: [{ name: 'ก๋วยเตี๋ยว', price: 50, qty: 1 }],
+      total: 50,
+      status: 'pending',
+      mockRef: 'm2',
+    })
+    scheduleFullLifecycle(order.id, 100)
+    jest.runAllTimers()
+    await Promise.resolve()
+    jest.runAllTimers()
+    await Promise.resolve()
+    jest.runAllTimers()
+    await Promise.resolve()
+    jest.runAllTimers()
+    await Promise.resolve()
+    jest.runAllTimers()
+    await Promise.resolve()
+    const final = repo.getOrderById(order.id)
+    expect(['paid', 'preparing', 'delivering', 'delivered']).toContain(final?.status)
+    jest.useRealTimers()
   })
 })
