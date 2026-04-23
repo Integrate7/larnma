@@ -17,11 +17,11 @@ export async function GET(req: NextRequest) {
     .map((p) => repo.getElderLocation(p.elderId))
     .filter((l): l is ElderLocation => l !== undefined)
 
-  if (process.env.NODE_ENV !== 'production' && locations.length === 0) {
+  if (process.env.NODE_ENV === 'development' && locations.length === 0) {
     const mockLocations = pairings.map((p) => ({
       elderId: p.elderId,
-      lat: 13.7563,
-      lng: 100.5018,
+      lat: 13.8276,
+      lng: 100.5599,
       accuracy: 10,
       capturedAt: new Date().toISOString(),
     }))

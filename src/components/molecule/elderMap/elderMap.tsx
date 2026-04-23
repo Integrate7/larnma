@@ -35,28 +35,30 @@ export function ElderMap({ locations }: ElderMapProps) {
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 
   return (
-    <MapContainer
-      center={center}
-      zoom={15}
-      style={{ height: '300px', width: '100%' }}
-      className="rounded-lg"
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution={osmAttribution}
-      />
-      {locations.map((loc) => (
-        <Marker
-          key={loc.elderId}
-          position={[loc.lat, loc.lng]}
-          icon={markerIcon}
-        >
-          <Popup>
-            {t('locationUpdated')}{' '}
-            {new Date(loc.capturedAt).toLocaleString('th-TH')}
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
+    <div className="isolate">
+      <MapContainer
+        center={center}
+        zoom={15}
+        style={{ height: '300px', width: '100%' }}
+        className="rounded-lg"
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution={osmAttribution}
+        />
+        {locations.map((loc) => (
+          <Marker
+            key={loc.elderId}
+            position={[loc.lat, loc.lng]}
+            icon={markerIcon}
+          >
+            <Popup>
+              {t('locationUpdated')}{' '}
+              {new Date(loc.capturedAt).toLocaleString('th-TH')}
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
   )
 }
