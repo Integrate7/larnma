@@ -3,6 +3,7 @@ import type {
   AudioEvent,
   Consent,
   DeviceSession,
+  ElderLocation,
   ElderProfile,
   Invite,
   Notification,
@@ -28,6 +29,7 @@ type State = {
   notifications: Map<string, Notification>
   orders: Map<string, Order>
   points: Map<string, PointEntry[]>
+  elderLocations: Map<string, ElderLocation>
 }
 
 const makeState = (): State => ({
@@ -43,6 +45,7 @@ const makeState = (): State => ({
   notifications: new Map(),
   orders: new Map(),
   points: new Map(),
+  elderLocations: new Map(),
 })
 
 export function createInMemoryRepository(): IRepository {
@@ -334,6 +337,14 @@ export function createInMemoryRepository(): IRepository {
     },
     listConsents(userId) {
       return consents.filter((c) => c.userId === userId)
+    },
+
+    setElderLocation(loc) {
+      state.elderLocations.set(loc.elderId, loc)
+      return loc
+    },
+    getElderLocation(elderId) {
+      return state.elderLocations.get(elderId)
     },
 
     reset() {
