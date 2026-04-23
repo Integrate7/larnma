@@ -43,6 +43,7 @@ export function DashboardPage() {
   const { state, handler, alerts } = useDashboardController()
   const latest = state.events[0]
   const primary = state.pairings.find((p) => p.isPrimary)
+  const headerPairing = primary ?? state.pairings[0] ?? null
   const [pendingOrder, setPendingOrder] = useState<PendingOrder | null>(null)
 
   const handleMenuClick = (
@@ -73,7 +74,9 @@ export function DashboardPage() {
         <div>
           <div className="mono-label">{t('caregiver.dashboard.title')}</div>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-            {primary?.elderName ? `คุณ${primary.elderName}วันนี้` : 'วันนี้'}
+            {headerPairing?.elderName
+              ? `คุณ${headerPairing.elderName}วันนี้`
+              : 'วันนี้'}
           </h1>
         </div>
         <div
