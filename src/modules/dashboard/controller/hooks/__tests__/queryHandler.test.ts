@@ -55,7 +55,7 @@ describe('useDashboardQueryHandler', () => {
   it('sets locations and pairings when all APIs succeed', async () => {
     const eventsBody = { events: [], notifications: [] }
     const locationsBody = { locations: [{ elderId: 'e1', lat: 13.75, lng: 100.5, capturedAt: new Date().toISOString() }] }
-    const pairingsBody = [{ id: 'p1', elderId: 'e1', isPrimary: true, elderName: 'ย่าสมร' }]
+    const pairingsBody = [{ id: 'p1', elderId: 'e1', isPrimary: true, elderName: 'ย่าสมร', elderPhone: '0811' }]
     global.fetch = jest.fn()
       .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(eventsBody) } as unknown as Response)
       .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(locationsBody) } as unknown as Response)
@@ -65,6 +65,45 @@ describe('useDashboardQueryHandler', () => {
       expect(result.current.gs.state.locations).toHaveLength(1)
       expect(result.current.gs.state.pairings).toHaveLength(1)
       expect(result.current.gs.state.pairings[0].elderName).toBe('ย่าสมร')
+    })
+  })
+
+  it('carries elderName and elderPhone (including null) through to state', async () => {
+    const eventsBody = { events: [], notifications: [] }
+    const locationsBody = { locations: [] }
+    const pairingsBody = [
+      {
+        id: 'p1',
+        elderId: 'e1',
+        isPrimary: true,
+        elderName: 'ย่า',
+        elderPhone: '0812345678',
+      },
+      {
+        id: 'p2',
+        elderId: 'e2',
+        isPrimary: false,
+        elderName: null,
+        elderPhone: null,
+      },
+    ]
+    global.fetch = jest.fn()
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(eventsBody) } as unknown as Response)
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(locationsBody) } as unknown as Response)
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(pairingsBody) } as unknown as Response)
+    const { result } = renderAll()
+    await waitFor(() => {
+      expect(result.current.gs.state.pairings).toHaveLength(2)
+    })
+    expect(result.current.gs.state.pairings[0]).toMatchObject({
+      id: 'p1',
+      elderName: 'ย่า',
+      elderPhone: '0812345678',
+    })
+    expect(result.current.gs.state.pairings[1]).toMatchObject({
+      id: 'p2',
+      elderName: null,
+      elderPhone: null,
     })
   })
 

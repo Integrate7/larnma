@@ -7,7 +7,8 @@ import type {
 } from '@/shared/types'
 
 export type PairingInfo = Pick<Pairing, 'id' | 'elderId' | 'isPrimary'> & {
-  elderName: string
+  elderName: string | null
+  elderPhone: string | null
 }
 
 export type DashboardGlobalState = {
