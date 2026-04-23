@@ -55,7 +55,7 @@ describe('useDashboardQueryHandler', () => {
   it('sets locations and pairings when all APIs succeed', async () => {
     const eventsBody = { events: [], notifications: [] }
     const locationsBody = { locations: [{ elderId: 'e1', lat: 13.75, lng: 100.5, capturedAt: new Date().toISOString() }] }
-    const pairingsBody = [{ id: 'p1', elderId: 'e1', isPrimary: true }]
+    const pairingsBody = [{ id: 'p1', elderId: 'e1', isPrimary: true, elderName: 'ย่าสมร' }]
     global.fetch = jest.fn()
       .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(eventsBody) } as unknown as Response)
       .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(locationsBody) } as unknown as Response)
@@ -64,6 +64,21 @@ describe('useDashboardQueryHandler', () => {
     await waitFor(() => {
       expect(result.current.gs.state.locations).toHaveLength(1)
       expect(result.current.gs.state.pairings).toHaveLength(1)
+      expect(result.current.gs.state.pairings[0].elderName).toBe('ย่าสมร')
     })
+  })
+
+  it('fetches each endpoint exactly once on mount (no refetch loop)', async () => {
+    // Every load() call writes to gs (replaceAll/setError/setLocations/setPairings),
+    // which re-renders the hook. With unstable deps the effect would refire the
+    // fetch trio on every rerender. Assert we stopped at one round = 3 calls.
+    mockFetch(200, { events: [], notifications: [] })
+    const { result } = renderAll()
+    await waitFor(() => {
+      expect(result.current.gs.state.error).toBe(null)
+    })
+    // Allow any looping effect a chance to fire.
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    expect((global.fetch as jest.Mock).mock.calls.length).toBe(3)
   })
 })

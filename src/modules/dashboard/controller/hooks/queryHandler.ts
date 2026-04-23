@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { z } from 'zod'
 import { fetcher } from '@/services/adapter/fetcher'
 import type {
@@ -51,6 +51,7 @@ const pairingsSchema = z.array(
     id: z.string(),
     elderId: z.string(),
     isPrimary: z.boolean(),
+    elderName: z.string(),
   }),
 )
 
@@ -69,6 +70,12 @@ const locationsSchema = z.object({
 type GS = ReturnType<typeof useDashboardGlobalState>
 
 export function useDashboardQueryHandler(gs: GS) {
+  // Keep the latest gs behind a ref so load() stays reference-stable. Depending
+  // directly on `gs` makes load fire on every render (gs is a fresh object
+  // literal) → useEffect([load]) → setState → rerender → infinite refetch.
+  const gsRef = useRef(gs)
+  gsRef.current = gs
+
   const load = useCallback(async () => {
     const [eventsRes, locationsRes, pairingsRes] = await Promise.all([
       fetcher('/api/events', listSchema),
@@ -76,19 +83,19 @@ export function useDashboardQueryHandler(gs: GS) {
       fetcher('/api/pairings/me', pairingsSchema),
     ])
     if (eventsRes.success) {
-      gs.replaceAll(eventsRes.data.events, eventsRes.data.notifications)
-      gs.setError(null)
+      gsRef.current.replaceAll(eventsRes.data.events, eventsRes.data.notifications)
+      gsRef.current.setError(null)
     } else {
-      gs.setError(eventsRes.error)
+      gsRef.current.setError(eventsRes.error)
     }
     if (locationsRes.success) {
-      gs.setLocations(locationsRes.data.locations)
+      gsRef.current.setLocations(locationsRes.data.locations)
     }
     if (pairingsRes.success) {
-      gs.setPairings(pairingsRes.data)
+      gsRef.current.setPairings(pairingsRes.data)
     }
     // pairings fetch failure is intentionally silent — hides invite button (pairings stays [])
-  }, [gs])
+  }, [])
 
   useEffect(() => {
     void load()

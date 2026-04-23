@@ -50,18 +50,18 @@ describe('useElderEventStream', () => {
     expect(MockEventSource.instances[0].url).toBe('/api/elder/events/stream')
   })
 
-  it('sets order notification on order_delivered message', () => {
+  it('sets order notification on order_placed message', () => {
     installES()
     const { result } = renderStream()
     act(() => {
       MockEventSource.instances[0].handlers.onmessage?.({
-        data: JSON.stringify({ kind: 'order_delivered', menuName: 'ข้าวผัด', caregiverName: 'หลาน' }),
+        data: JSON.stringify({ kind: 'order_placed', menuName: 'ข้าวผัด', caregiverName: 'หลาน' }),
       })
     })
     expect(result.current.gs.orderNotification).toEqual({ menuName: 'ข้าวผัด', caregiverName: 'หลาน' })
   })
 
-  it('ignores non-order_delivered messages', () => {
+  it('ignores non-order_placed messages', () => {
     installES()
     const { result } = renderStream()
     act(() => {
@@ -72,12 +72,12 @@ describe('useElderEventStream', () => {
     expect(result.current.gs.orderNotification).toBeNull()
   })
 
-  it('ignores order_delivered without menuName', () => {
+  it('ignores order_placed without menuName', () => {
     installES()
     const { result } = renderStream()
     act(() => {
       MockEventSource.instances[0].handlers.onmessage?.({
-        data: JSON.stringify({ kind: 'order_delivered' }),
+        data: JSON.stringify({ kind: 'order_placed' }),
       })
     })
     expect(result.current.gs.orderNotification).toBeNull()
@@ -97,7 +97,7 @@ describe('useElderEventStream', () => {
     const { result } = renderStream()
     act(() => {
       MockEventSource.instances[0].handlers.onmessage?.({
-        data: JSON.stringify({ kind: 'order_delivered', menuName: 'ต้มยำ' }),
+        data: JSON.stringify({ kind: 'order_placed', menuName: 'ต้มยำ' }),
       })
     })
     expect(result.current.gs.orderNotification?.caregiverName).toBe('หลาน')

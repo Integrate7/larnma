@@ -98,7 +98,7 @@ export function ElderHomePage() {
         <p className="serif-caption text-center">
           Wake word{' '}
           <b style={{ fontStyle: 'normal', color: 'var(--brand-ink)' }}>
-            "หลานม่า"
+            "หลานรัก"
           </b>{' '}
           เปิดอยู่
         </p>

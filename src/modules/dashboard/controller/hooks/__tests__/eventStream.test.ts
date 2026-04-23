@@ -115,4 +115,28 @@ describe('useDashboardEventStream', () => {
     unmount()
     expect(es.closed).toBe(true)
   })
+
+  it('creates exactly one EventSource across renders (no infinite loop)', () => {
+    installES()
+    renderStream()
+    // Each onmessage triggers a state update → rerender. With unstable deps
+    // the effect would teardown + reconnect on every rerender, creating new
+    // EventSource instances each time. Assert we stayed at one.
+    act(() => {
+      MockEventSource.instances[0].handlers.onmessage?.({
+        data: JSON.stringify({ kind: 'audio', event: { id: 'ev1', mood: 'HAPPY' } }),
+      })
+    })
+    act(() => {
+      MockEventSource.instances[0].handlers.onmessage?.({
+        data: JSON.stringify({ kind: 'notification', notification: { id: 'n1', priority: 'critical' } }),
+      })
+    })
+    act(() => {
+      MockEventSource.instances[0].handlers.onmessage?.({
+        data: JSON.stringify({ kind: 'order', orderId: 'o1', status: 'delivered' }),
+      })
+    })
+    expect(MockEventSource.instances.length).toBe(1)
+  })
 })

@@ -4,7 +4,30 @@ import { INTENTS } from '@/shared/types/intent'
 import { MOODS } from '@/shared/types/mood'
 import type { GeminiAdapter, GeminiAnalysis, GeminiInput } from './types'
 
-const MODEL_NAME = 'gemini-flash-latest'
+const DEFAULT_MODEL_CHAIN = [
+  'gemini-flash-latest',
+  'gemini-2.5-flash',
+  'gemini-flash-lite-latest',
+] as const
+
+function getModelChain(): string[] {
+  const env = process.env.GEMINI_MODELS
+  if (env && env.trim().length > 0) {
+    const parsed = env
+      .split(',')
+      .map((m) => m.trim())
+      .filter((m) => m.length > 0)
+    if (parsed.length > 0) return parsed
+  }
+  return [...DEFAULT_MODEL_CHAIN]
+}
+
+function isQuotaExhausted(err: unknown): boolean {
+  const e = err as { status?: number; message?: string } | null
+  if (e?.status === 429) return true
+  const msg = e?.message ?? (typeof err === 'string' ? err : '')
+  return /\b429\b|RESOURCE_EXHAUSTED|quota/i.test(msg)
+}
 
 const PROMPT = `# บทบาท
 คุณคือ "หลาน AI" ผู้ช่วยดูแลผู้สูงอายุ พูดจาไพเราะ อบอุ่น ห่วงใย เหมือนหลานแท้ๆ ที่ดูแลคุณยาย/คุณตาอยู่ใกล้ๆ
@@ -160,37 +183,58 @@ async function blobToBase64(blob: Blob): Promise<string> {
 
 export function createRealGeminiAdapter(apiKey: string): GeminiAdapter {
   const genAI = new GoogleGenerativeAI(apiKey)
-  const model = genAI.getGenerativeModel({ model: MODEL_NAME })
+  const chain = getModelChain()
+  let cursor = 0
+
+  function emptyFallback(fallback: string): GeminiAnalysis {
+    return {
+      transcript: fallback || '(silent)',
+      intent: 'UNKNOWN',
+      mood: 'NORMAL',
+      confidence: 0.5,
+      summary: 'ไม่พบใจความเฉพาะ',
+      entities: {},
+    }
+  }
 
   return {
     async analyze(input: GeminiInput): Promise<GeminiAnalysis> {
       const fallback = input.hintKeyword ?? ''
-      try {
-        const parts: Array<
-          { text: string } | { inlineData: { mimeType: string; data: string } }
-        > = [{ text: PROMPT }]
+      const parts: Array<
+        { text: string } | { inlineData: { mimeType: string; data: string } }
+      > = [{ text: PROMPT }]
 
-        if (input.audio) {
-          const mimeType = input.audio.type || 'audio/webm'
-          const data = await blobToBase64(input.audio)
-          parts.push({ inlineData: { mimeType, data } })
-        } else if (fallback) {
-          parts.push({ text: `ประโยค: "${fallback}"` })
-        }
+      if (input.audio) {
+        const mimeType = input.audio.type || 'audio/webm'
+        const data = await blobToBase64(input.audio)
+        parts.push({ inlineData: { mimeType, data } })
+      } else if (fallback) {
+        parts.push({ text: `ประโยค: "${fallback}"` })
+      }
 
-        const result = await model.generateContent(parts)
-        const raw = parseJsonBlock(result.response.text())
-        return mapAnalysis(raw, fallback)
-      } catch {
-        return {
-          transcript: fallback || '(silent)',
-          intent: 'UNKNOWN',
-          mood: 'NORMAL',
-          confidence: 0.5,
-          summary: 'ไม่พบใจความเฉพาะ',
-          entities: {},
+      for (let attempt = 0; attempt < chain.length; attempt++) {
+        const idx = (cursor + attempt) % chain.length
+        const modelName = chain[idx]
+        try {
+          const model = genAI.getGenerativeModel({ model: modelName })
+          const result = await model.generateContent(parts)
+          cursor = idx
+          const raw = parseJsonBlock(result.response.text())
+          return mapAnalysis(raw, fallback)
+        } catch (err) {
+          if (isQuotaExhausted(err)) {
+            console.warn(
+              `[gemini] quota exhausted on "${modelName}", rotating to next model`,
+            )
+            continue
+          }
+          console.error(`[gemini] call failed on "${modelName}":`, err)
+          return emptyFallback(fallback)
         }
       }
+
+      console.error('[gemini] all models exhausted; returning fallback')
+      return emptyFallback(fallback)
     },
   }
 }
@@ -202,4 +246,7 @@ export const __testing = {
   normalizeIntent,
   normalizeConfidence,
   normalizeEntities,
+  getModelChain,
+  isQuotaExhausted,
+  DEFAULT_MODEL_CHAIN,
 }

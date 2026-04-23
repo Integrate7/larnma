@@ -3,7 +3,7 @@ export const ADAPTER_CONFIG = {
   accessCookie: 'larnma_access',
   refreshCookie: 'larnma_refresh',
   deviceCookie: 'larnma_device',
-  accessTtlSec: 15 * 60,
+  accessTtlSec: 15 * 24 * 60 * 60,
   refreshTtlSec: 30 * 24 * 60 * 60,
   deviceTtlSec: 365 * 24 * 60 * 60,
   otpExpireSec: 5 * 60,
