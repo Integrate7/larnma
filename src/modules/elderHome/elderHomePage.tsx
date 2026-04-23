@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { User } from 'lucide-react'
 import { Button } from '@/components/atom/button'
@@ -11,6 +12,27 @@ import { useElderHomeController } from './controller/controller'
 export function ElderHomePage() {
   const t = useTranslations()
   const { state, handler } = useElderHomeController()
+
+  useEffect(() => {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        void fetch('/api/elder/location', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            accuracy: pos.coords.accuracy,
+          }),
+        })
+      },
+      () => {
+        /* silently ignore — permission denied or unavailable */
+      },
+    )
+  }, [])
 
   return (
     <main className="elder-mode relative flex min-h-screen flex-col items-center justify-center gap-8 bg-background p-6">
