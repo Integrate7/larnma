@@ -21,25 +21,26 @@ type GS = ReturnType<typeof useCaregiverListGlobalState>
 
 export function useCaregiverListHandler(args: { gs: GS; elderId: string }): CaregiverListHandler {
   const { gs, elderId } = args
+  const { setCaregivers, setLoading, setError } = gs
 
   const load = useCallback(async () => {
-    gs.setLoading(true)
-    gs.setError(null)
+    setLoading(true)
+    setError(null)
     const res = await fetcher(
       `/api/pairings/elder?elderId=${encodeURIComponent(elderId)}`,
       listSchema,
     )
-    gs.setLoading(false)
+    setLoading(false)
     if (res.success) {
-      gs.setCaregivers(res.data.caregivers)
+      setCaregivers(res.data.caregivers)
     } else {
-      gs.setError(res.error)
+      setError(res.error)
     }
-  }, [gs, elderId])
+  }, [setCaregivers, setLoading, setError, elderId])
 
   const revoke = useCallback(
     async (pairingId: string) => {
-      gs.setError(null)
+      setError(null)
       const res = await fetcher(
         `/api/pairings/${pairingId}`,
         z.object({ ok: z.boolean() }),
@@ -48,10 +49,10 @@ export function useCaregiverListHandler(args: { gs: GS; elderId: string }): Care
       if (res.success) {
         await load()
       } else {
-        gs.setError(res.error)
+        setError(res.error)
       }
     },
-    [gs, load],
+    [setError, load],
   )
 
   return { load, revoke }
