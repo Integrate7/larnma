@@ -6,7 +6,9 @@ import type {
   Pairing,
 } from '@/shared/types'
 
-export type PairingInfo = Pick<Pairing, 'id' | 'elderId' | 'isPrimary'>
+export type PairingInfo = Pick<Pairing, 'id' | 'elderId' | 'isPrimary'> & {
+  elderName: string
+}
 
 export type DashboardGlobalState = {
   events: AudioEvent[]
