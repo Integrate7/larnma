@@ -49,7 +49,10 @@
       "latestStatus": "สถานะล่าสุด",
       "timeline": "ไทม์ไลน์วันนี้",
       "weeklyMood": "อารมณ์สัปดาห์นี้",
-      "empty": "ยังไม่มีเหตุการณ์"
+      "empty": "ยังไม่มีเหตุการณ์",
+      "location": "ที่อยู่ปัจจุบัน",
+      "noLocation": "ยังไม่ทราบที่อยู่ปัจจุบัน",
+      "locationUpdated": "อัพเดตล่าสุด:"
     },
     "addCaregiver": "เพิ่มคนดูแล",
     "manageCaregivers": "จัดการผู้ดูแล"
@@ -124,6 +127,13 @@
   "invite": {
     "landingTitle": "{inviter} เชิญคุณดูแล {elder}",
     "accept": "ยอมรับ",
-    "expired": "ลิงก์หมดอายุ"
+    "expired": "ลิงก์หมดอายุ",
+    "dialogTitle": "ลิงก์เชิญผู้ดูแล",
+    "linkLabel": "ลิงก์เชิญ",
+    "copyLink": "คัดลอกลิงก์",
+    "copied": "คัดลอกแล้ว!",
+    "shareViaLine": "แชร์ผ่าน LINE",
+    "shareViaSms": "แชร์ผ่าน SMS",
+    "expiresNote": "ลิงก์หมดอายุใน 24 ชั่วโมง"
   }
 }

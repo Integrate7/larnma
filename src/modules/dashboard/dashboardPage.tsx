@@ -113,7 +113,7 @@ export function DashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>ที่อยู่ปัจจุบัน</CardTitle>
+          <CardTitle>{t('caregiver.dashboard.location')}</CardTitle>
         </CardHeader>
         <CardContent>
           <ElderMap locations={state.locations} />

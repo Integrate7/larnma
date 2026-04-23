@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -19,10 +20,12 @@ export type ElderMapProps = {
 }
 
 export function ElderMap({ locations }: ElderMapProps) {
+  const t = useTranslations('caregiver.dashboard')
+
   if (locations.length === 0) {
     return (
       <p className="py-4 text-center text-sm text-muted-foreground">
-        ยังไม่ทราบที่อยู่ปัจจุบัน
+        {t('noLocation')}
       </p>
     )
   }
@@ -49,7 +52,7 @@ export function ElderMap({ locations }: ElderMapProps) {
           icon={markerIcon}
         >
           <Popup>
-            อัพเดตล่าสุด:{' '}
+            {t('locationUpdated')}{' '}
             {new Date(loc.capturedAt).toLocaleString('th-TH')}
           </Popup>
         </Marker>
