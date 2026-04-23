@@ -1,7 +1,12 @@
 import { useCallback, useEffect } from 'react'
 import { z } from 'zod'
 import { fetcher } from '@/services/adapter/fetcher'
-import type { AudioEvent, Notification, Priority } from '@/shared/types'
+import type {
+  AudioEvent,
+  ElderLocation,
+  Notification,
+  Priority,
+} from '@/shared/types'
 import type { useDashboardGlobalState } from './globalState'
 
 const audioEventSchema: z.ZodType<AudioEvent> = z.object({
@@ -41,17 +46,48 @@ const listSchema = z.object({
   notifications: z.array(notificationSchema),
 })
 
+const pairingsSchema = z.array(
+  z.object({
+    id: z.string(),
+    elderId: z.string(),
+    isPrimary: z.boolean(),
+  }),
+)
+
+const locationSchema: z.ZodType<ElderLocation> = z.object({
+  elderId: z.string(),
+  lat: z.number(),
+  lng: z.number(),
+  accuracy: z.number().optional(),
+  capturedAt: z.string(),
+})
+
+const locationsSchema = z.object({
+  locations: z.array(locationSchema),
+})
+
 type GS = ReturnType<typeof useDashboardGlobalState>
 
 export function useDashboardQueryHandler(gs: GS) {
   const load = useCallback(async () => {
-    const res = await fetcher('/api/events', listSchema)
-    if (res.success) {
-      gs.replaceAll(res.data.events, res.data.notifications)
+    const [eventsRes, locationsRes, pairingsRes] = await Promise.all([
+      fetcher('/api/events', listSchema),
+      fetcher('/api/elders/location', locationsSchema),
+      fetcher('/api/pairings/me', pairingsSchema),
+    ])
+    if (eventsRes.success) {
+      gs.replaceAll(eventsRes.data.events, eventsRes.data.notifications)
       gs.setError(null)
     } else {
-      gs.setError(res.error)
+      gs.setError(eventsRes.error)
     }
+    if (locationsRes.success) {
+      gs.setLocations(locationsRes.data.locations)
+    }
+    if (pairingsRes.success) {
+      gs.setPairings(pairingsRes.data)
+    }
+    // pairings fetch failure is intentionally silent — hides invite button (pairings stays [])
   }, [gs])
 
   useEffect(() => {

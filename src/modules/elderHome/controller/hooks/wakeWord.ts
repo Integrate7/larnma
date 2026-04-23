@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { useElderHomeGlobalState } from './globalState'
 
 type GS = ReturnType<typeof useElderHomeGlobalState>
@@ -41,6 +41,7 @@ function getSRCtor(): SRCtor | undefined {
 export function useWakeWord(gs: GS, onWake: () => void) {
   const onWakeRef = useRef(onWake)
   onWakeRef.current = onWake
+  const srRef = useRef<SRLike | null>(null)
   const [supported] = useState<boolean>(() => {
     const ok = !!getSRCtor()
     if (typeof window !== 'undefined') {
@@ -58,45 +59,36 @@ export function useWakeWord(gs: GS, onWake: () => void) {
   const shouldListen =
     supported && (micState === 'idle' || micState === 'wakeListening')
 
+  // Call this before getUserMedia to release the mic immediately
+  const stopImmediate = useCallback(() => {
+    const r = srRef.current
+    if (!r) return
+    srRef.current = null
+    try { r.stop() } catch { /* ignore */ }
+  }, [])
+
   useEffect(() => {
     if (!shouldListen) return
     const Ctor = getSRCtor()
     if (!Ctor) return
     const rec = new Ctor()
+    srRef.current = rec
     rec.continuous = true
     rec.interimResults = true
     rec.lang = 'th-TH'
     rec.maxAlternatives = 1
 
-    let stopped = false
-
-    rec.onstart = () => {
-      console.log('[WakeWord] onstart (th-TH)')
-    }
-    rec.onaudiostart = () => {
-      console.log('[WakeWord] onaudiostart (mic capturing)')
-    }
-    rec.onsoundstart = () => {
-      console.log('[WakeWord] onsoundstart (sound detected)')
-    }
-    rec.onspeechstart = () => {
-      console.log('[WakeWord] onspeechstart (speech detected)')
-    }
-    rec.onspeechend = () => {
-      console.log('[WakeWord] onspeechend')
-    }
-    rec.onnomatch = () => {
-      console.log('[WakeWord] onnomatch (could not transcribe)')
-    }
+    rec.onstart = () => { console.log('[WakeWord] onstart (th-TH)') }
+    rec.onaudiostart = () => { console.log('[WakeWord] onaudiostart (mic capturing)') }
+    rec.onsoundstart = () => { console.log('[WakeWord] onsoundstart') }
+    rec.onspeechstart = () => { console.log('[WakeWord] onspeechstart') }
+    rec.onspeechend = () => { console.log('[WakeWord] onspeechend') }
+    rec.onnomatch = () => { console.log('[WakeWord] onnomatch') }
     rec.onresult = (e: SREvent) => {
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const text = e.results[i][0].transcript
         const isFinal = e.results[i].isFinal
-        console.log(
-          '[WakeWord] heard:',
-          JSON.stringify(text),
-          isFinal ? '(final)' : '(interim)',
-        )
+        console.log('[WakeWord] heard:', JSON.stringify(text), isFinal ? '(final)' : '(interim)')
         if (KEYWORD_RE.test(text)) {
           console.log('[WakeWord] ✓ keyword matched → triggering onWake')
           onWakeRef.current()
@@ -108,13 +100,10 @@ export function useWakeWord(gs: GS, onWake: () => void) {
       console.warn('[WakeWord] error:', e?.error ?? e?.message ?? e)
     }
     rec.onend = () => {
-      console.log('[WakeWord] onend — stopped?', stopped)
-      if (stopped) return
-      try {
-        rec.start()
-      } catch (err) {
-        console.warn('[WakeWord] restart failed:', err)
-      }
+      // If stopped externally (srRef cleared) or by cleanup, don't restart
+      if (srRef.current !== rec) return
+      console.log('[WakeWord] onend — restarting')
+      try { rec.start() } catch (err) { console.warn('[WakeWord] restart failed:', err) }
     }
 
     try {
@@ -125,14 +114,10 @@ export function useWakeWord(gs: GS, onWake: () => void) {
     }
 
     return () => {
-      stopped = true
-      try {
-        rec.stop()
-      } catch {
-        // ignore
-      }
+      srRef.current = null
+      try { rec.stop() } catch { /* ignore */ }
     }
   }, [shouldListen, setMicState])
 
-  return { supported }
+  return { supported, stopImmediate }
 }

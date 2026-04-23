@@ -26,11 +26,15 @@ export function useDashboardEventStream(gs: GS) {
           kind: string
           event?: unknown
           notification?: unknown
+          orderId?: string
+          status?: string
         }
         if (parsed.kind === 'audio' && parsed.event) {
           gs.prependEvent(parsed.event as never)
         } else if (parsed.kind === 'notification' && parsed.notification) {
           gs.prependNotification(parsed.notification as never)
+        } else if (parsed.kind === 'order' && parsed.orderId && parsed.status) {
+          gs.updateOrderStatus(parsed.orderId, parsed.status)
         }
       } catch {
         // ignore bad frames

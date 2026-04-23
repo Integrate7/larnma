@@ -4,6 +4,7 @@ import { getGeminiAdapter } from '@/services/gemini'
 import { requireDevice } from '@/services/guards'
 import { fanOutEvent } from '@/services/notifications'
 import { getRepository } from '@/services/repository'
+import { MENU_CATALOG } from '@/services/menu'
 
 export const runtime = 'nodejs'
 
@@ -41,6 +42,28 @@ export async function POST(req: NextRequest) {
   })
 
   const repo = getRepository()
+
+  let entities = analysis.entities
+  if (analysis.intent === 'HUNGRY') {
+    const profile = repo.getElderProfile(auth.elderId)
+    const conditions = new Set(profile?.conditions ?? [])
+    const allergies = new Set(profile?.allergies ?? [])
+    const dislikes = new Set(profile?.foodDislikes ?? [])
+    const annotated = MENU_CATALOG.map((item) => {
+      const allergyMatch = item.allergensContained.filter((a) => allergies.has(a))
+      const conditionMatch = item.conditionsExcluded.filter((c) => conditions.has(c))
+      const isSafe = allergyMatch.length === 0 && conditionMatch.length === 0 && !dislikes.has(item.name)
+      return { ...item, allergyMatch, conditionMatch, isSafe }
+    })
+    const safe = annotated.filter((i) => i.isSafe).slice(0, 3)
+    // Include items that only have allergy mismatch (not health condition) so caregiver can confirm
+    const allergyOnly = annotated
+      .filter((i) => !i.isSafe && i.allergyMatch.length > 0 && i.conditionMatch.length === 0)
+      .slice(0, 2)
+    const menuSuggestions = [...safe, ...allergyOnly]
+    entities = { ...entities, menuSuggestions }
+  }
+
   const event = repo.createAudioEvent({
     elderId: auth.elderId,
     transcript: analysis.transcript,
@@ -48,7 +71,7 @@ export async function POST(req: NextRequest) {
     intent: analysis.intent,
     confidence: analysis.confidence,
     summary: analysis.summary,
-    entities: analysis.entities,
+    entities,
   })
 
   // Fan-out notifications + publish to SSE bus

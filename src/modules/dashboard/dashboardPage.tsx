@@ -1,17 +1,70 @@
 'use client'
 
+import { AlertTriangle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import dynamic from 'next/dynamic'
+import { useState } from 'react'
 import { Button } from '@/components/atom/button'
-import { Card } from '@/components/atom/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/atom/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/atom/dialog'
 import { MoodChip } from '@/components/molecule/moodChip'
 import { PriorityBadge } from '@/components/molecule/priorityBadge'
-import type { Mood } from '@/shared/types'
+import type { Mood, Notification } from '@/shared/types'
 import { useDashboardController } from './controller/controller'
+import { InviteSection } from './views/inviteSection/inviteSection'
+
+const ElderMap = dynamic(
+  () => import('@/components/molecule/elderMap').then((m) => m.ElderMap),
+  { ssr: false },
+)
+
+type PendingOrder = {
+  notification: Notification
+  menuId: string
+  menuName: string
+  allergyMatch: string[]
+}
 
 export function DashboardPage() {
   const t = useTranslations()
   const { state, handler } = useDashboardController()
   const latest = state.events[0]
+  const primary = state.pairings.find((p) => p.isPrimary)
+  const [pendingOrder, setPendingOrder] = useState<PendingOrder | null>(null)
+
+  const handleMenuClick = (
+    notification: Notification,
+    menu: {
+      id: string
+      name: string
+      price: number
+      allergyMatch: string[]
+      isSafe: boolean
+    },
+  ) => {
+    if (!menu.isSafe && menu.allergyMatch.length > 0) {
+      setPendingOrder({
+        notification,
+        menuId: menu.id,
+        menuName: menu.name,
+        allergyMatch: menu.allergyMatch,
+      })
+    } else {
+      void handler.order(notification, state.events, menu.id)
+    }
+  }
 
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-5 px-5 py-6">
@@ -39,148 +92,240 @@ export function DashboardPage() {
         </p>
       ) : null}
 
-      {/* Stat grid */}
-      <div className="grid grid-cols-2 gap-2">
-        <Card className="p-3">
-          <div className="mono-label">Mood</div>
-          <div className="mt-1 text-base font-semibold tracking-tight">
-            {state.events[0]?.mood ?? 'ปกติ'}
-          </div>
-        </Card>
-        <Card className="p-3">
-          <div className="mono-label">Events</div>
-          <div className="mt-1 text-base font-semibold tracking-tight">
-            {state.events.length} ครั้ง
-          </div>
-        </Card>
-      </div>
-
-      {/* Latest event */}
-      <section className="flex flex-col gap-2">
-        <div className="mono-label">
-          {t('caregiver.dashboard.latestStatus')}
-        </div>
-        {latest ? (
-          <Card accent="log" className="p-3" data-testid="dashboard-latest">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="mono-label">
-                  {new Date(latest.createdAt).toLocaleTimeString('th-TH', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </span>
-                <MoodChip mood={latest.mood} />
-              </div>
-              <span className="mono-label">latest</span>
-            </div>
-            <p className="mt-2 text-sm leading-snug text-[var(--ink)]">
-              "{latest.transcript}"
-            </p>
-            <p className="mt-1 serif-caption">{latest.summary}</p>
-          </Card>
-        ) : (
-          <p className="serif-caption">{t('caregiver.dashboard.empty')}</p>
-        )}
-      </section>
-
-      {/* Timeline */}
-      <section className="flex flex-col gap-2" data-testid="dashboard-timeline">
-        <div className="mono-label">{t('caregiver.dashboard.timeline')}</div>
-        {state.events.map((e) => (
-          <Card key={e.id} accent="log" className="p-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="mono-label">
-                  {new Date(e.createdAt).toLocaleTimeString('th-TH', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </span>
-                <MoodChip mood={e.mood} />
-              </div>
-              <span className="mono-label">log</span>
-            </div>
-            <p className="mt-2 text-sm leading-snug text-[var(--ink)]">
-              "{e.transcript}"
-            </p>
-            <p className="mt-1 serif-caption">{e.summary}</p>
-          </Card>
-        ))}
-      </section>
-
-      {/* Notifications - PRESERVES the food-order logic */}
-      <section className="flex flex-col gap-2" data-testid="dashboard-notis">
-        <div className="mono-label">การแจ้งเตือน</div>
-        {state.notifications.map((n) => {
-          const event = state.events.find((e) => e.id === n.eventId)
-          const isHungry = event?.intent === 'HUNGRY'
-          const alreadyOrdered = event
-            ? state.orderedEventIds.includes(event.id)
-            : false
-          return (
-            <Card
-              key={n.id}
-              accent={n.priority === 'critical' ? 'crit' : 'normal'}
-              className="p-3"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex flex-1 items-center gap-2">
-                  <PriorityBadge priority={n.priority} />
-                  <span className="text-sm text-[var(--ink)]">
-                    {event?.summary ?? n.eventId}
-                  </span>
-                  {isHungry && event ? (
-                    <span className="mono-label">
-                      ฿{(event.entities as { price?: number }).price ?? '-'}
-                    </span>
-                  ) : null}
-                </div>
-                {!n.ackAt ? (
-                  <Button
-                    size="sm"
-                    onClick={() => void handler.ack(n.id)}
-                    data-testid={`ack-${n.id}`}
-                  >
-                    {t('emergency.handleIt')}
-                  </Button>
-                ) : isHungry && !alreadyOrdered ? (
-                  <Button
-                    size="sm"
-                    variant="default"
-                    onClick={() => void handler.order(n, state.events)}
-                    data-testid={`order-${n.id}`}
-                  >
-                    {t('food.pay')}
-                  </Button>
-                ) : alreadyOrdered ? (
-                  <span className="mono-label" style={{ color: 'var(--ok)' }}>
-                    {t('food.paid')}
-                  </span>
-                ) : (
-                  <span className="mono-label">ackแล้ว</span>
-                )}
-              </div>
-            </Card>
-          )
-        })}
-      </section>
-
-      {/* Weekly mood */}
-      <section className="flex flex-col gap-2">
-        <div className="mono-label">{t('caregiver.dashboard.weeklyMood')}</div>
-        <div className="flex flex-wrap gap-3">
-          {(Object.keys(state.moodCounts) as Mood[]).map((m) => (
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('caregiver.dashboard.latestStatus')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {latest ? (
             <div
-              key={m}
-              className="flex items-center gap-2 rounded-md border border-[var(--rule)] bg-white px-3 py-1.5"
+              className="flex flex-col gap-2"
+              data-testid="dashboard-latest"
             >
-              <MoodChip mood={m} />
-              <span className="font-mono text-sm">{state.moodCounts[m]}</span>
+              <div className="flex items-center gap-2">
+                <MoodChip mood={latest.mood} />
+                <span className="text-sm text-muted-foreground">
+                  {new Date(latest.createdAt).toLocaleString('th-TH')}
+                </span>
+              </div>
+              <p className="text-lg font-medium">"{latest.transcript}"</p>
+              <p className="text-sm text-muted-foreground">{latest.summary}</p>
             </div>
-          ))}
-        </div>
-      </section>
+          ) : (
+            <p className="text-muted-foreground">
+              {t('caregiver.dashboard.empty')}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('caregiver.dashboard.timeline')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul
+            className="flex flex-col divide-y"
+            data-testid="dashboard-timeline"
+          >
+            {state.events.map((e) => (
+              <li key={e.id} className="flex items-center gap-3 py-2">
+                <MoodChip mood={e.mood} />
+                <span className="flex-1 text-sm">
+                  "{e.transcript}"
+                  <span className="ml-1 text-muted-foreground">
+                    — {e.summary}
+                  </span>
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(e.createdAt).toLocaleTimeString('th-TH')}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+
+      <InviteSection elderId={primary?.elderId ?? ''} isPrimary={!!primary} />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>การแจ้งเตือน</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="flex flex-col divide-y" data-testid="dashboard-notis">
+            {state.notifications.map((n) => {
+              const event = state.events.find((e) => e.id === n.eventId)
+              const isHungry = event?.intent === 'HUNGRY'
+              const alreadyOrdered = event
+                ? state.orderedEventIds.includes(event.id)
+                : false
+              const suggestions =
+                isHungry && event
+                  ? ((
+                      event.entities as {
+                        menuSuggestions?: {
+                          id: string
+                          name: string
+                          price: number
+                          allergyMatch: string[]
+                          isSafe: boolean
+                        }[]
+                      }
+                    ).menuSuggestions ?? [])
+                  : []
+              const notiKey = n.id
+              return (
+                <li key={notiKey} className="flex flex-col gap-3 py-3">
+                  <div className="flex items-center gap-3">
+                    <PriorityBadge priority={n.priority} />
+                    <span className="flex-1 text-sm">
+                      {event ? (
+                        <>
+                          <span className="font-medium">
+                            "{event.transcript}"
+                          </span>
+                          <span className="ml-1 text-muted-foreground">
+                            — {event.summary}
+                          </span>
+                        </>
+                      ) : (
+                        n.eventId
+                      )}
+                    </span>
+                    {!n.ackAt ? (
+                      <Button
+                        size="sm"
+                        onClick={() => void handler.ack(n.id)}
+                        data-testid={`ack-${n.id}`}
+                      >
+                        {t('emergency.handleIt')}
+                      </Button>
+                    ) : alreadyOrdered ? (
+                      <span className="text-xs text-green-600">
+                        {t('food.paid')}
+                      </span>
+                    ) : !isHungry ? (
+                      <span className="text-xs text-muted-foreground">
+                        รับทราบแล้ว
+                      </span>
+                    ) : null}
+                  </div>
+
+                  {n.ackAt &&
+                  isHungry &&
+                  !alreadyOrdered &&
+                  suggestions.length > 0 ? (
+                    <div className="ml-8 flex flex-col gap-2">
+                      <p className="text-xs text-muted-foreground">
+                        {t('food.suggestTitle')} — เลือกเมนูที่จะสั่ง:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {suggestions.map((menu) => {
+                          const isUnsafe =
+                            !menu.isSafe && menu.allergyMatch.length > 0
+                          return (
+                            <Button
+                              key={menu.id}
+                              size="sm"
+                              variant={isUnsafe ? 'destructive' : 'outline'}
+                              onClick={() => handleMenuClick(n, menu)}
+                              data-testid={`order-menu-${menu.id}`}
+                            >
+                              {isUnsafe && (
+                                <AlertTriangle className="mr-1 h-3 w-3" />
+                              )}
+                              {menu.name} ฿{menu.price}
+                            </Button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ) : null}
+                </li>
+              )
+            })}
+          </ul>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('caregiver.dashboard.location')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ElderMap locations={state.locations} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('caregiver.dashboard.weeklyMood')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-3">
+            {(Object.keys(state.moodCounts) as Mood[]).map((m) => (
+              <div
+                key={m}
+                className="flex items-center gap-2 rounded-md bg-muted px-3 py-1.5 text-sm"
+              >
+                <MoodChip mood={m} />
+                <span>{state.moodCounts[m]}</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog
+        open={!!pendingOrder}
+        onOpenChange={(open) => {
+          if (!open) setPendingOrder(null)
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              แจ้งเตือนอาหารแพ้
+            </DialogTitle>
+            <DialogDescription>
+              เมนู{' '}
+              <span className="font-medium text-foreground">
+                "{pendingOrder?.menuName}"
+              </span>{' '}
+              มีส่วนผสม{' '}
+              <span className="font-medium text-destructive">
+                {pendingOrder?.allergyMatch.join(', ')}
+              </span>{' '}
+              ซึ่งตรงกับรายการแพ้อาหารของผู้สูงอายุ
+              <br />
+              คุณต้องการสั่งต่อหรือไม่?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingOrder(null)}>
+              ยกเลิก
+            </Button>
+            <Button
+              variant="destructive"
+              data-testid="confirm-allergic-order"
+              onClick={() => {
+                if (pendingOrder) {
+                  void handler.order(
+                    pendingOrder.notification,
+                    state.events,
+                    pendingOrder.menuId,
+                  )
+                  setPendingOrder(null)
+                }
+              }}
+            >
+              ยืนยันสั่งต่อ
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }

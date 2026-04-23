@@ -12,7 +12,7 @@ type WindowWithWebkitAudio = Window & {
   webkitAudioContext?: typeof AudioContext
 }
 
-export function useElderHomeHandler(gs: GS) {
+export function useElderHomeHandler(gs: GS, stopSRRef: { current: () => void }) {
   const recorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const streamRef = useRef<MediaStream | null>(null)
@@ -111,6 +111,7 @@ export function useElderHomeHandler(gs: GS) {
   }
 
   const startRecording = async () => {
+    stopSRRef.current() // release SR mic before acquiring for MediaRecorder
     gs.setErrorMessage(null)
     try {
       streamRef.current = await navigator.mediaDevices.getUserMedia({

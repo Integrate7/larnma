@@ -1,5 +1,5 @@
 import { getRepository } from '@/services/repository'
-import { publishToAll } from '@/services/eventBus'
+import { publishToAll, publishToElder } from '@/services/eventBus'
 import type { Order, OrderStatus } from '@/shared/types'
 import { POINTS_PER_ORDER } from './types'
 
@@ -47,6 +47,24 @@ export function advanceOrder(orderId: string): Order | null {
       delta: entry.delta,
       balance: entry.balanceAfter,
     })
+    const caregiver = repo.getUserById(updated.caregiverId)
+    const menuName = updated.menu[0]?.name ?? 'อาหาร'
+    publishToElder(updated.elderId, {
+      kind: 'order_delivered',
+      orderId: updated.id,
+      menuName,
+      caregiverName: caregiver?.name ?? 'หลาน',
+    })
   }
   return updated
+}
+
+export function scheduleFullLifecycle(orderId: string, stepMs: number): void {
+  const advance = () => {
+    const updated = advanceOrder(orderId)
+    if (updated && updated.status !== 'delivered' && updated.status !== 'cancelled') {
+      setTimeout(advance, stepMs)
+    }
+  }
+  setTimeout(advance, stepMs)
 }

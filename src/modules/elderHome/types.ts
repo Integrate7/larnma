@@ -12,9 +12,15 @@ export type AudioUploadResult = {
   advice?: string
 }
 
+export type OrderNotification = {
+  menuName: string
+  caregiverName: string
+}
+
 export type ElderHomeGlobalState = {
   micState: MicButtonState
   lastResult: AudioUploadResult | null
   errorMessage: string | null
   isOnline: boolean
+  orderNotification: OrderNotification | null
 }

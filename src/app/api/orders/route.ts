@@ -7,6 +7,8 @@ import {
   requireCaregiver,
 } from '@/services/guards'
 import { getRepository } from '@/services/repository'
+import { scheduleFullLifecycle } from '@/services/orderLifecycle'
+import { ADAPTER_CONFIG } from '@/services/adapter/config'
 
 export const runtime = 'nodejs'
 
@@ -47,5 +49,9 @@ export async function POST(req: NextRequest) {
     status: 'pending',
     mockRef: `MOCK-${Date.now()}`,
   })
+
+  // auto-advance through full lifecycle (pending→paid→preparing→delivering→delivered)
+  scheduleFullLifecycle(order.id, ADAPTER_CONFIG.orderLifecycleStepMs)
+
   return NextResponse.json({ id: order.id, status: order.status, total })
 }

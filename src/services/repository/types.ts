@@ -2,6 +2,7 @@ import type {
   AudioEvent,
   Consent,
   DeviceSession,
+  ElderLocation,
   ElderProfile,
   Invite,
   Notification,
@@ -113,6 +114,10 @@ export type IRepository = {
   // Consent
   recordConsent: (c: Omit<Consent, 'id'>) => Consent
   listConsents: (userId: string) => Consent[]
+
+  // Elder location
+  setElderLocation: (location: ElderLocation) => ElderLocation
+  getElderLocation: (elderId: string) => ElderLocation | undefined
 
   // Admin
   reset: () => void
