@@ -3,4 +3,6 @@ export type QrDisplayProps = {
   size?: number
   alt?: string
   dataUrl?: string
+  code?: string
+  expiresAt?: Date
 }

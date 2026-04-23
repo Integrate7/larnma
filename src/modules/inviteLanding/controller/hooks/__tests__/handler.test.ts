@@ -71,9 +71,7 @@ describe('useInviteLandingHandler', () => {
   })
 
   it('accept: happy path sets accepted flag', async () => {
-    mockFetch([
-      { status: 200, body: { pairingId: 'P', caregiverId: 'C' } },
-    ])
+    mockFetch([{ status: 200, body: { pairingId: 'P', caregiverId: 'C' } }])
     const { result } = renderAll()
     act(() => {
       result.current.form.setValue('phone', '0811111111')

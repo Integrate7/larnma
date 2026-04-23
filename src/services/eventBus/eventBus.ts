@@ -8,11 +8,17 @@ export type DashboardEvent =
   | { kind: 'point'; caregiverId: string; delta: number; balance: number }
   | { kind: 'heartbeat' }
 
-type Listener = (e: DashboardEvent) => void
+export type ElderEvent =
+  | { kind: 'order_delivered'; orderId: string; menuName: string; caregiverName: string }
+  | { kind: 'heartbeat' }
 
-const listenersByCaregiver: Map<string, Set<Listener>> = new Map()
+type CaregiverListener = (e: DashboardEvent) => void
+type ElderListener = (e: ElderEvent) => void
 
-export function subscribe(caregiverId: string, listener: Listener): () => void {
+const listenersByCaregiver: Map<string, Set<CaregiverListener>> = new Map()
+const listenersByElder: Map<string, Set<ElderListener>> = new Map()
+
+export function subscribe(caregiverId: string, listener: CaregiverListener): () => void {
   const set = listenersByCaregiver.get(caregiverId) ?? new Set()
   set.add(listener)
   listenersByCaregiver.set(caregiverId, set)
@@ -23,15 +29,22 @@ export function subscribe(caregiverId: string, listener: Listener): () => void {
   }
 }
 
+export function subscribeElder(elderId: string, listener: ElderListener): () => void {
+  const set = listenersByElder.get(elderId) ?? new Set()
+  set.add(listener)
+  listenersByElder.set(elderId, set)
+  return () => {
+    const s = listenersByElder.get(elderId)
+    s?.delete(listener)
+    if (s && s.size === 0) listenersByElder.delete(elderId)
+  }
+}
+
 export function publishTo(caregiverId: string, event: DashboardEvent): void {
   const set = listenersByCaregiver.get(caregiverId)
   if (!set) return
   for (const l of set) {
-    try {
-      l(event)
-    } catch {
-      // ignore individual listener errors
-    }
+    try { l(event) } catch { /* ignore */ }
   }
 }
 
@@ -42,10 +55,19 @@ export function publishToAll(
   for (const cid of caregiverIds) publishTo(cid, event)
 }
 
+export function publishToElder(elderId: string, event: ElderEvent): void {
+  const set = listenersByElder.get(elderId)
+  if (!set) return
+  for (const l of set) {
+    try { l(event) } catch { /* ignore */ }
+  }
+}
+
 export function listenerCount(caregiverId: string): number {
   return listenersByCaregiver.get(caregiverId)?.size ?? 0
 }
 
 export function resetEventBus(): void {
   listenersByCaregiver.clear()
+  listenersByElder.clear()
 }

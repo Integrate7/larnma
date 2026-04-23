@@ -1,5 +1,5 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
+@import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -43,53 +43,49 @@
 
 :root {
   --radius: 0.75rem;
-  --background: oklch(99.3% 0.002 305);
-  --foreground: oklch(20% 0.03 305);
-  --card: oklch(100% 0 0);
-  --card-foreground: oklch(20% 0.03 305);
-  --popover: oklch(100% 0 0);
-  --popover-foreground: oklch(20% 0.03 305);
-  --primary: oklch(55% 0.19 305);
-  --primary-foreground: oklch(99% 0 0);
-  --secondary: oklch(96% 0.012 305);
-  --secondary-foreground: oklch(20% 0.03 305);
-  --muted: oklch(96% 0.012 305);
-  --muted-foreground: oklch(50% 0.02 305);
-  --accent: oklch(93% 0.025 305);
-  --accent-foreground: oklch(20% 0.03 305);
-  --destructive: oklch(58% 0.24 25);
-  --border: oklch(90% 0.015 305);
-  --input: oklch(90% 0.015 305);
-  --ring: oklch(55% 0.19 305);
 
-  --mood-danger: oklch(58% 0.24 25);
-  --mood-pain: oklch(62% 0.2 50);
-  --mood-sad: oklch(55% 0.15 260);
-  --mood-lonely: oklch(65% 0.13 285);
-  --mood-hungry: oklch(70% 0.16 80);
-  --mood-happy: oklch(72% 0.18 140);
-  --mood-normal: oklch(72% 0.05 240);
-}
+  /* Prototype palette — source of truth */
+  --ink: oklch(0.22 0.03 300);
+  --ink-2: oklch(0.38 0.025 300);
+  --ink-3: oklch(0.55 0.02 300);
+  --rule: oklch(0.9 0.012 300);
+  --rule-2: oklch(0.84 0.018 300);
+  --brand: oklch(0.42 0.18 300);
+  --brand-ink: oklch(0.34 0.18 300);
+  --brand-wash: oklch(0.96 0.025 300);
+  --danger: oklch(0.55 0.18 28);
+  --danger-wash: oklch(0.96 0.03 28);
+  --ok: oklch(0.52 0.12 160);
+  --warn: oklch(0.48 0.14 300);
 
-.dark {
-  --background: oklch(17% 0.015 305);
-  --foreground: oklch(93% 0.02 305);
-  --card: oklch(21% 0.02 305);
-  --card-foreground: oklch(93% 0.02 305);
-  --popover: oklch(21% 0.02 305);
-  --popover-foreground: oklch(93% 0.02 305);
-  --primary: oklch(68% 0.18 305);
-  --primary-foreground: oklch(17% 0.015 305);
-  --secondary: oklch(26% 0.03 305);
-  --secondary-foreground: oklch(93% 0.02 305);
-  --muted: oklch(26% 0.03 305);
-  --muted-foreground: oklch(70% 0.04 305);
-  --accent: oklch(29% 0.04 305);
-  --accent-foreground: oklch(93% 0.02 305);
-  --destructive: oklch(70% 0.19 25);
-  --border: oklch(37% 0.04 305);
-  --input: oklch(33% 0.04 305);
-  --ring: oklch(68% 0.18 305);
+  /* shadcn/tailwind semantic tokens mapped onto the palette */
+  --background: #ffffff;
+  --foreground: var(--ink);
+  --card: #ffffff;
+  --card-foreground: var(--ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--ink);
+  --primary: var(--brand);
+  --primary-foreground: #ffffff;
+  --secondary: var(--brand-wash);
+  --secondary-foreground: var(--brand-ink);
+  --muted: var(--brand-wash);
+  --muted-foreground: var(--ink-3);
+  --accent: var(--brand-wash);
+  --accent-foreground: var(--brand-ink);
+  --destructive: var(--danger);
+  --border: var(--rule);
+  --input: var(--rule);
+  --ring: var(--brand);
+
+  /* Mood palette */
+  --mood-danger: var(--danger);
+  --mood-pain: oklch(0.62 0.2 50);
+  --mood-sad: oklch(0.55 0.15 260);
+  --mood-lonely: var(--brand);
+  --mood-hungry: oklch(0.7 0.16 80);
+  --mood-happy: var(--ok);
+  --mood-normal: var(--ink-3);
 }
 
 @layer base {
@@ -101,13 +97,43 @@
   }
 }
 
-/* Elder-mode: large touch + high contrast */
-.elder-mode {
-  font-size: 20px;
-  line-height: 1.6;
+/* Utility classes used by restyled pages to match the printable prototype */
+
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.mono-label b {
+  color: var(--ink);
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
-.elder-mode button,
-.elder-mode [role='button'] {
-  min-height: 56px;
+.serif-caption {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 11px;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+.brand-mark {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 14px;
+}
+
+/* Kept for compat; no-op now (option B from design — match prototype sizes exactly). */
+.elder-mode {
+  /* intentionally empty */
 }

@@ -1,25 +1,24 @@
 'use client'
 
 import { useEffect } from 'react'
-import { Stepper } from '@/components/molecule/stepper'
-import { REGISTER_STEPS } from './types'
 import { useRegisterController } from './controller/controller'
+import { REGISTER_STEPS } from './types'
 import {
   CaregiverStep,
-  WelcomeStep,
   ChoiceStep,
-  PhoneStep,
   ConsentStep,
   ElderBasicStep,
   ElderEmergencyStep,
   ElderHealthStep,
   ElderOptionalStep,
   OtpStep,
+  PhoneStep,
   QrStep,
   ReviewStep,
-  } from './views/stepViews'
+  WelcomeStep,
+} from './views/stepViews'
 
-  export function RegisterPage() {
+export function RegisterPage() {
   const { form, state, handler } = useRegisterController()
   const stepIndex = REGISTER_STEPS.indexOf(state.step) + 1
 
@@ -38,12 +37,19 @@ import {
   }
 
   return (
-    <main className="mx-auto flex max-w-xl flex-col gap-4 px-4 py-6">
-      <Stepper current={stepIndex} total={REGISTER_STEPS.length} />
+    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-4 px-5 py-6">
+      <header className="border-b border-[var(--rule)] pb-3">
+        <div className="mono-label">
+          Step {stepIndex}/{REGISTER_STEPS.length}
+        </div>
+        <h1 className="mt-1 text-lg font-semibold tracking-tight">
+          {state.step === 'qr' ? 'QR pairing' : 'ลงทะเบียน'}
+        </h1>
+      </header>
       {state.errorMessage ? (
         <p
           role="alert"
-          className="rounded-md bg-destructive/10 p-3 text-sm text-destructive"
+          className="rounded-md border border-[color-mix(in_oklch,var(--danger)_35%,var(--rule))] bg-[var(--danger-wash)] p-3 text-sm text-[var(--danger)]"
         >
           {state.errorMessage}
         </p>
@@ -52,7 +58,10 @@ import {
         <WelcomeStep onNext={() => handler.next()} />
       ) : null}
       {state.step === 'choice' ? (
-        <ChoiceStep onNext={() => handler.next()} onGoogle={() => handler.onGoogle()} />
+        <ChoiceStep
+          onNext={() => handler.next()}
+          onGoogle={() => handler.onGoogle()}
+        />
       ) : null}
       {state.step === 'phone' ? <PhoneStep {...props} /> : null}
 
@@ -63,7 +72,9 @@ import {
       {state.step === 'consent' ? <ConsentStep {...props} /> : null}
       {state.step === 'elderBasic' ? <ElderBasicStep {...props} /> : null}
       {state.step === 'elderHealth' ? <ElderHealthStep {...props} /> : null}
-      {state.step === 'elderEmergency' ? <ElderEmergencyStep {...props} /> : null}
+      {state.step === 'elderEmergency' ? (
+        <ElderEmergencyStep {...props} />
+      ) : null}
       {state.step === 'elderOptional' ? <ElderOptionalStep {...props} /> : null}
       {state.step === 'review' ? <ReviewStep {...props} /> : null}
       {state.step === 'qr' ? (

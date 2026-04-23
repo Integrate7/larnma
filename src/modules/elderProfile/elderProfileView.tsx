@@ -1,9 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { Button } from '@/components/atom/button'
 import { Badge } from '@/components/atom/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/atom/card'
+import { Button } from '@/components/atom/button'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/atom/card'
 import { Skeleton } from '@/components/atom/skeleton'
 import { useElderProfileController } from './controller/controller'
 
@@ -11,8 +16,16 @@ export function ElderProfileView({ elderId }: { elderId: string }) {
   const { state } = useElderProfileController(elderId)
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-4 p-6">
-      <h1 className="text-3xl font-bold">ข้อมูลผู้สูงอายุ</h1>
+    <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 px-5 py-6">
+      <header className="border-b border-[var(--rule)] pb-3">
+        <div className="mono-label">ผู้สูงอายุ</div>
+        <h1
+          className="mt-1 text-2xl font-semibold tracking-tight"
+          data-testid="elder-profile-name-header"
+        >
+          {state.data?.name ?? 'ข้อมูลผู้สูงอายุ'}
+        </h1>
+      </header>
 
       {state.loading ? (
         <div className="flex flex-col gap-2">
@@ -30,7 +43,10 @@ export function ElderProfileView({ elderId }: { elderId: string }) {
         <div className="flex flex-col gap-3" data-testid="elder-profile-view">
           <Card>
             <CardHeader>
-              <CardTitle data-testid="elder-profile-name">
+              <CardTitle
+                className="mono-label"
+                data-testid="elder-profile-name"
+              >
                 {state.data.name}
               </CardTitle>
             </CardHeader>
@@ -47,11 +63,11 @@ export function ElderProfileView({ elderId }: { elderId: string }) {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>สุขภาพ</CardTitle>
+              <CardTitle className="mono-label">สุขภาพ</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3 text-sm">
               <div>
-                <p className="mb-1 font-medium">โรคประจำตัว</p>
+                <p className="mono-label mb-1">โรคประจำตัว</p>
                 <div className="flex flex-wrap gap-2">
                   {state.data.conditions.length === 0 ? (
                     <span className="text-muted-foreground">-</span>
@@ -65,7 +81,7 @@ export function ElderProfileView({ elderId }: { elderId: string }) {
                 </div>
               </div>
               <div>
-                <p className="mb-1 font-medium">แพ้</p>
+                <p className="mono-label mb-1">แพ้</p>
                 <div
                   className="flex flex-wrap gap-2"
                   data-testid="elder-profile-allergies"
@@ -83,7 +99,7 @@ export function ElderProfileView({ elderId }: { elderId: string }) {
               </div>
             </CardContent>
           </Card>
-          <Button asChild size="xl">
+          <Button asChild size="xl" className="w-full">
             <Link
               href={`/caregiver/elders/${elderId}/edit`}
               data-testid="elder-profile-edit-link"

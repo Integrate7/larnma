@@ -2,16 +2,24 @@ import { forwardRef } from 'react'
 import { cn } from '@/shared/helpers/cn'
 import type { CardProps } from './types'
 
+const ACCENT_CLASS: Record<'log' | 'normal' | 'crit', string> = {
+  log: 'border-l-[3px] border-l-[var(--ok)]',
+  normal: 'border-l-[3px] border-l-[var(--brand)]',
+  crit: 'bg-[var(--danger-wash)] border-[color-mix(in_oklch,var(--danger)_35%,var(--rule))]',
+}
+
 export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
-  { className, ...props },
+  { className, accent, ...props },
   ref,
 ) {
   return (
     <div
       ref={ref}
       data-slot="card"
+      data-accent={accent}
       className={cn(
         'rounded-xl border bg-card text-card-foreground shadow-sm',
+        accent ? ACCENT_CLASS[accent] : '',
         className,
       )}
       {...props}

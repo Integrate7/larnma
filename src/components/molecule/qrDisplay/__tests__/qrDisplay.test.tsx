@@ -25,7 +25,9 @@ describe('QrDisplay', () => {
   })
 
   it('uses custom alt', async () => {
-    render(<QrDisplay value="x" alt="pair QR" dataUrl="data:image/png;base64,a" />)
+    render(
+      <QrDisplay value="x" alt="pair QR" dataUrl="data:image/png;base64,a" />,
+    )
     await waitFor(() => {
       expect(screen.getByAltText('pair QR')).toBeInTheDocument()
     })

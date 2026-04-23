@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
 import { BrowserMultiFormatReader } from '@zxing/browser'
+import { useEffect, useRef, useState } from 'react'
 import type { QrScannerProps } from './types'
 
 export function QrScanner({ onDecode, onError, disabled }: QrScannerProps) {
@@ -50,17 +50,31 @@ export function QrScanner({ onDecode, onError, disabled }: QrScannerProps) {
   }, [onDecode, onError, disabled])
 
   return (
-    <div className="relative w-full max-w-sm">
-      <video
-        ref={videoRef}
-        className="aspect-square w-full rounded-lg bg-black"
-        muted
-        playsInline
-      >
-        <track kind="captions" />
-      </video>
+    <div className="relative w-full max-w-sm" data-slot="qr-scanner">
+      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-black">
+        <video
+          ref={videoRef}
+          className="h-full w-full object-cover"
+          muted
+          playsInline
+        >
+          <track kind="captions" />
+        </video>
+        <span className="pointer-events-none absolute left-2 top-2 h-6 w-6 rounded-tl border-l-[3px] border-t-[3px] border-[var(--brand)]" />
+        <span className="pointer-events-none absolute right-2 top-2 h-6 w-6 rounded-tr border-r-[3px] border-t-[3px] border-[var(--brand)]" />
+        <span className="pointer-events-none absolute bottom-2 left-2 h-6 w-6 rounded-bl border-b-[3px] border-l-[3px] border-[var(--brand)]" />
+        <span className="pointer-events-none absolute bottom-2 right-2 h-6 w-6 rounded-br border-b-[3px] border-r-[3px] border-[var(--brand)]" />
+        <span
+          className="pointer-events-none absolute left-2 right-2 top-1/2 h-0.5 bg-[var(--brand)]"
+          style={{ boxShadow: '0 0 8px var(--brand)' }}
+        />
+      </div>
       {error ? (
-        <p className="mt-2 text-sm text-destructive" role="alert">
+        <p
+          className="mt-2 serif-caption"
+          role="alert"
+          style={{ color: 'var(--danger)' }}
+        >
           {error}
         </p>
       ) : null}

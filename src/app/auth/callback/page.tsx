@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useEffect } from 'react'
 
 function CallbackHandler() {
   const router = useRouter()
@@ -48,10 +48,11 @@ function CallbackHandler() {
   }, [router, searchParams])
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
-      <div className="text-center">
-        <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-primary"></div>
-        <p className="font-bold">กำลังเชื่อมต่อกับ Google...</p>
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-3 text-center">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-[var(--rule)] border-t-[var(--brand)]" />
+        <div className="mono-label">Google Auth</div>
+        <p className="serif-caption">กำลังเชื่อมต่อกับ Google...</p>
       </div>
     </div>
   )
@@ -61,8 +62,11 @@ export default function AuthCallbackPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
-          <p>กำลังโหลด...</p>
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="mono-label">Google Auth</div>
+            <p className="serif-caption">กำลังโหลด...</p>
+          </div>
         </div>
       }
     >

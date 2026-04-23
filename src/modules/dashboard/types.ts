@@ -17,10 +17,19 @@ export type DashboardGlobalState = {
   pairings: PairingInfo[]
   locations: ElderLocation[]
   orderedEventIds: string[]
+  orderStatuses: Record<string, string>
+}
+
+export type MenuSuggestion = {
+  id: string
+  name: string
+  price: number
+  allergyMatch: string[]
+  isSafe: boolean
 }
 
 export type DashboardHandler = {
   ack: (notificationId: string) => Promise<void>
-  order: (notification: Notification, events: AudioEvent[]) => Promise<void>
+  order: (notification: Notification, events: AudioEvent[], menuId: string) => Promise<void>
   reload: () => Promise<void>
 }

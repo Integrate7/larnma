@@ -9,6 +9,7 @@ import { resetEventBus } from '@/services/eventBus'
 import { issueCaregiverSession, issueDeviceSession } from '@/services/auth'
 import { COOKIES, setSessionCookie } from '@/services/jwt'
 import { ADAPTER_CONFIG } from '@/services/adapter/config'
+import { DEFAULT_PRIMARY_PERMISSIONS } from '@/shared/types/permission'
 
 export const runtime = 'nodejs'
 
@@ -32,8 +33,6 @@ export async function POST(_req: NextRequest) {
   const elderUser = repo.createUser({ role: 'elder', phone: '0800000002', name: 'ทดสอบ ยาย' })
   repo.createElderProfile({
     userId: elderUser.id,
-    name: 'ทดสอบ ยาย',
-    phone: '0800000002',
     birthdate: '1950-01-01',
     addressLine: '123 ถนนทดสอบ',
     district: 'บางรัก',
@@ -52,12 +51,7 @@ export async function POST(_req: NextRequest) {
     elderId: elderUser.id,
     caregiverId: caregiver.id,
     isPrimary: true,
-    permissions: {
-      receive_noti: true,
-      edit_elder_profile: true,
-      pay_food_orders: true,
-      view_health_data: true,
-    },
+    permissions: DEFAULT_PRIMARY_PERMISSIONS,
   })
 
   // device session for elder

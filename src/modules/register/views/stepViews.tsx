@@ -28,11 +28,19 @@ export function WelcomeStep({ onNext }: { onNext: () => void }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-2xl">{t('welcome.title')}</CardTitle>
+        <div className="mono-label mb-1">เริ่มต้น</div>
+        <CardTitle className="text-2xl tracking-tight">
+          {t('welcome.title')}
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
-        <p className="text-muted-foreground">{t('welcome.subtitle')}</p>
-        <Button onClick={onNext} size="xl" data-testid="welcome-next">
+        <p className="serif-caption">{t('welcome.subtitle')}</p>
+        <Button
+          onClick={onNext}
+          size="xl"
+          className="w-full"
+          data-testid="welcome-next"
+        >
           {t('welcome.startButton')}
         </Button>
       </CardContent>
@@ -43,19 +51,25 @@ export function WelcomeStep({ onNext }: { onNext: () => void }) {
 export function ChoiceStep({
   onNext,
   onGoogle,
-}: { onNext: () => void; onGoogle: () => void }) {
+}: {
+  onNext: () => void
+  onGoogle: () => void
+}) {
   const t = useTranslations()
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('register.choice.title')}</CardTitle>
+        <div className="mono-label mb-1">วิธีเริ่ม</div>
+        <CardTitle className="text-xl tracking-tight">
+          {t('register.choice.title')}
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <Button
           variant="outline"
           size="xl"
           onClick={onGoogle}
-          className="flex items-center justify-center gap-2"
+          className="flex w-full items-center justify-center gap-2"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path
@@ -87,7 +101,12 @@ export function ChoiceStep({
             </span>
           </div>
         </div>
-        <Button onClick={onNext} size="xl" variant="secondary">
+        <Button
+          onClick={onNext}
+          size="xl"
+          variant="secondary"
+          className="w-full"
+        >
           {t('register.choice.standard')}
         </Button>
       </CardContent>
@@ -100,7 +119,10 @@ export function PhoneStep({ form, onNext, submitting }: StepProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('register.phoneTitle')}</CardTitle>
+        <div className="mono-label mb-1">เบอร์โทร</div>
+        <CardTitle className="text-xl tracking-tight">
+          {t('register.phoneTitle')}
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <FormField
@@ -120,6 +142,7 @@ export function PhoneStep({ form, onNext, submitting }: StepProps) {
           onClick={onNext}
           loading={submitting}
           size="xl"
+          className="w-full"
           data-testid="phone-next"
         >
           {t('auth.sendOtp')}
@@ -140,10 +163,13 @@ export function OtpStep({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('auth.otpTitle')}</CardTitle>
+        <div className="mono-label mb-1">ยืนยัน OTP</div>
+        <CardTitle className="text-xl tracking-tight">
+          {t('auth.otpTitle')}
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
-        <p className="text-muted-foreground">
+        <p className="serif-caption">
           {t('auth.otpSubtitle', { phone: form.getValues('phone') })}
         </p>
         <OtpInput
@@ -182,7 +208,10 @@ export function CaregiverStep({ form, onNext, submitting }: StepProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('caregiver.profile.title')}</CardTitle>
+        <div className="mono-label mb-1">ผู้ดูแล · โปรไฟล์</div>
+        <CardTitle className="text-xl tracking-tight">
+          {t('caregiver.profile.title')}
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <FormField
@@ -209,6 +238,7 @@ export function CaregiverStep({ form, onNext, submitting }: StepProps) {
           onClick={onNext}
           loading={submitting}
           size="xl"
+          className="w-full"
           data-testid="caregiver-next"
         >
           {t('common.next')}
@@ -223,7 +253,10 @@ export function ConsentStep({ form, onNext, submitting }: StepProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('register.consentTitle')}</CardTitle>
+        <div className="mono-label mb-1">ความยินยอม</div>
+        <CardTitle className="text-xl tracking-tight">
+          {t('register.consentTitle')}
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <ConsentToggle
@@ -250,6 +283,7 @@ export function ConsentStep({ form, onNext, submitting }: StepProps) {
           onClick={onNext}
           loading={submitting}
           size="xl"
+          className="w-full"
           data-testid="consent-next"
         >
           {t('common.next')}
@@ -269,7 +303,10 @@ export function ElderBasicStep({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('register.elderBasic')}</CardTitle>
+        <div className="mono-label mb-1">ผู้สูงอายุ · พื้นฐาน</div>
+        <CardTitle className="text-xl tracking-tight">
+          {t('register.elderBasic')}
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <FormField
@@ -379,7 +416,10 @@ export function ElderHealthStep({ form, onNext, onBack }: StepProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('register.elderHealth')}</CardTitle>
+        <div className="mono-label mb-1">ผู้สูงอายุ · สุขภาพ</div>
+        <CardTitle className="text-xl tracking-tight">
+          {t('register.elderHealth')}
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <FormField label="โรคประจำตัว (คั่นด้วย ,)" hint="เช่น เบาหวาน, ความดัน">
@@ -418,7 +458,10 @@ export function ElderEmergencyStep({ form, onNext, onBack }: StepProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('register.elderEmergency')}</CardTitle>
+        <div className="mono-label mb-1">ผู้สูงอายุ · ฉุกเฉิน</div>
+        <CardTitle className="text-xl tracking-tight">
+          {t('register.elderEmergency')}
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-3">
@@ -491,7 +534,10 @@ export function ElderOptionalStep({ form, onNext, onBack }: StepProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('register.elderOptional')}</CardTitle>
+        <div className="mono-label mb-1">ผู้สูงอายุ · เสริม</div>
+        <CardTitle className="text-xl tracking-tight">
+          {t('register.elderOptional')}
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-3">
@@ -545,7 +591,10 @@ export function ReviewStep({ form, onNext, onBack, submitting }: StepProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('register.review')}</CardTitle>
+        <div className="mono-label mb-1">ตรวจสอบ</div>
+        <CardTitle className="text-xl tracking-tight">
+          {t('register.review')}
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 text-sm">
         <p>
@@ -596,21 +645,33 @@ export function QrStep({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('register.qrTitle')}</CardTitle>
+        <div className="mono-label mb-1">QR · จับคู่เครื่อง</div>
+        <CardTitle className="text-xl tracking-tight">
+          {t('register.qrTitle')}
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">
-        <p className="text-sm text-muted-foreground">
-          {t('register.qrSubtitle')}
-        </p>
+        <p className="serif-caption text-center">{t('register.qrSubtitle')}</p>
         {qrDataUrl ? (
           <QrDisplay
             value={pairingToken ?? ''}
             dataUrl={qrDataUrl}
             size={280}
             alt="pairing QR"
+            code={
+              pairingToken ? pairingToken.slice(0, 6).toUpperCase() : undefined
+            }
+            expiresAt={
+              pairingToken ? new Date(Date.now() + 15 * 60 * 1000) : undefined
+            }
           />
         ) : (
-          <Button onClick={onGenerate} size="xl" data-testid="qr-generate">
+          <Button
+            onClick={onGenerate}
+            size="xl"
+            className="w-full"
+            data-testid="qr-generate"
+          >
             สร้าง QR
           </Button>
         )}

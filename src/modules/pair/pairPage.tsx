@@ -1,11 +1,10 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useEffect, useRef } from 'react'
 import { Button } from '@/components/atom/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/atom/card'
-import { QrScanner, QrImageUpload } from '@/components/molecule/qrScanner'
-import { useTranslations } from 'next-intl'
+import { QrImageUpload, QrScanner } from '@/components/molecule/qrScanner'
 import { usePairController } from './controller/controller'
 
 export function PairPage() {
@@ -31,67 +30,87 @@ export function PairPage() {
   }, [state.state, router])
 
   return (
-    <main className="mx-auto flex max-w-lg flex-col gap-4 p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">{t('pair.title')}</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center gap-4">
-          <p className="text-center text-lg text-muted-foreground">
-            {t('pair.subtitle')}
-          </p>
-          {state.state === 'ready' ? (
-            <div className="flex w-full flex-col gap-3">
-              <Button onClick={handler.startScan} size="xl" data-testid="pair-start">
-                เปิดกล้อง
-              </Button>
-              <div className="relative flex items-center py-2">
-                <div className="flex-grow border-t border-muted" />
-                <span className="mx-4 flex-shrink text-sm text-muted-foreground">หรือ</span>
-                <div className="flex-grow border-t border-muted" />
-              </div>
-              <QrImageUpload onDecode={handler.onDecode} onError={handler.onError} />
-            </div>
-          ) : null}
-          {state.state === 'scanning' ? (
-            <div className="flex w-full flex-col items-center gap-4">
-              <QrScanner onDecode={handler.onDecode} onError={handler.onError} />
-              <div className="w-full border-t pt-4">
-                <QrImageUpload onDecode={handler.onDecode} onError={handler.onError} />
-              </div>
-            </div>
-          ) : null}
-          {state.state === 'pairing' ? (
-            <p className="text-lg" data-testid="pair-pairing">
-              {t('common.loading')}
-            </p>
-          ) : null}
-          {state.state === 'success' ? (
-            <p
-              className="text-xl text-primary"
-              data-testid="pair-success"
+    <main className="mx-auto flex min-h-screen max-w-lg flex-col px-6 py-8">
+      <header className="border-b border-[var(--rule)] pb-3">
+        <div className="mono-label">หลานม่า</div>
+        <h1 className="mt-1 text-xl font-semibold tracking-tight">
+          {t('pair.title')}
+        </h1>
+      </header>
+
+      <section className="mt-6 flex flex-col items-center gap-4">
+        <p className="serif-caption max-w-xs text-center">
+          {t('pair.subtitle')}
+        </p>
+
+        {state.state === 'ready' ? (
+          <div className="flex w-full flex-col gap-3">
+            <Button
+              onClick={handler.startScan}
+              size="xl"
+              data-testid="pair-start"
             >
-              {t('pair.success')}
-            </p>
-          ) : null}
-          {state.state === 'error' && state.errorMessage ? (
-            <div className="flex w-full flex-col items-center gap-3">
-              <p role="alert" className="text-destructive text-center">
-                {state.errorMessage}
-              </p>
-              <Button onClick={handler.startScan} size="xl" className="w-full">
-                {t('common.retry')}
-              </Button>
-              <div className="relative flex w-full items-center py-2">
-                <div className="flex-grow border-t border-muted" />
-                <span className="mx-4 flex-shrink text-sm text-muted-foreground">หรือ</span>
-                <div className="flex-grow border-t border-muted" />
-              </div>
-              <QrImageUpload onDecode={handler.onDecode} onError={handler.onError} />
+              เปิดกล้อง
+            </Button>
+            <div className="relative flex items-center py-2">
+              <div className="flex-grow border-t border-[var(--rule)]" />
+              <span className="mono-label mx-4">หรือ</span>
+              <div className="flex-grow border-t border-[var(--rule)]" />
             </div>
-          ) : null}
-        </CardContent>
-      </Card>
+            <QrImageUpload
+              onDecode={handler.onDecode}
+              onError={handler.onError}
+            />
+          </div>
+        ) : null}
+        {state.state === 'scanning' ? (
+          <div className="flex w-full flex-col items-center gap-4">
+            <QrScanner onDecode={handler.onDecode} onError={handler.onError} />
+            <span className="mono-label">กำลังหา QR…</span>
+            <div className="w-full border-t border-[var(--rule)] pt-4">
+              <QrImageUpload
+                onDecode={handler.onDecode}
+                onError={handler.onError}
+              />
+            </div>
+          </div>
+        ) : null}
+        {state.state === 'pairing' ? (
+          <p className="text-lg" data-testid="pair-pairing">
+            {t('common.loading')}
+          </p>
+        ) : null}
+        {state.state === 'success' ? (
+          <p
+            className="text-xl text-[var(--brand-ink)]"
+            data-testid="pair-success"
+          >
+            {t('pair.success')}
+          </p>
+        ) : null}
+        {state.state === 'error' && state.errorMessage ? (
+          <div className="flex w-full flex-col items-center gap-3">
+            <p
+              role="alert"
+              className="rounded-md border border-[color-mix(in_oklch,var(--danger)_35%,var(--rule))] bg-[var(--danger-wash)] p-3 text-sm text-[var(--danger)]"
+            >
+              {state.errorMessage}
+            </p>
+            <Button onClick={handler.startScan} size="xl" className="w-full">
+              {t('common.retry')}
+            </Button>
+            <div className="relative flex w-full items-center py-2">
+              <div className="flex-grow border-t border-[var(--rule)]" />
+              <span className="mono-label mx-4">หรือ</span>
+              <div className="flex-grow border-t border-[var(--rule)]" />
+            </div>
+            <QrImageUpload
+              onDecode={handler.onDecode}
+              onError={handler.onError}
+            />
+          </div>
+        ) : null}
+      </section>
     </main>
   )
 }
