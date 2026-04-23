@@ -1,7 +1,7 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useRef } from 'react'
 import { Button } from '@/components/atom/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/atom/card'
 import { QrScanner, QrImageUpload } from '@/components/molecule/qrScanner'
@@ -11,7 +11,17 @@ import { usePairController } from './controller/controller'
 export function PairPage() {
   const t = useTranslations()
   const router = useRouter()
+  const search = useSearchParams()
   const { state, handler } = usePairController()
+  const autoConsumed = useRef(false)
+
+  // If ?token=... is present, consume it directly (useful for tests + paste flow)
+  useEffect(() => {
+    const tokenParam = search.get('token')
+    if (!tokenParam || autoConsumed.current) return
+    autoConsumed.current = true
+    void handler.consume(tokenParam)
+  }, [search, handler])
 
   useEffect(() => {
     if (state.state === 'success') {
@@ -52,10 +62,17 @@ export function PairPage() {
             </div>
           ) : null}
           {state.state === 'pairing' ? (
-            <p className="text-lg">{t('common.loading')}</p>
+            <p className="text-lg" data-testid="pair-pairing">
+              {t('common.loading')}
+            </p>
           ) : null}
           {state.state === 'success' ? (
-            <p className="text-xl text-primary">{t('pair.success')}</p>
+            <p
+              className="text-xl text-primary"
+              data-testid="pair-success"
+            >
+              {t('pair.success')}
+            </p>
           ) : null}
           {state.state === 'error' && state.errorMessage ? (
             <div className="flex w-full flex-col items-center gap-3">

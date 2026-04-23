@@ -34,11 +34,11 @@ export const registerFormSchema = z.object({
   allergies: z.array(z.string()).default([]),
   // Elder emergency
   hospitalName: z.string().optional().default(''),
-  hospitalPhone: z.string().optional().default(''),
+  hospitalPhone: z.string().refine(v => !v || /^0\d{9}$/.test(v), { message: 'เบอร์ต้องเป็น 10 หลัก' }).optional().default(''),
   doctorName: z.string().optional().default(''),
-  doctorPhone: z.string().optional().default(''),
+  doctorPhone: z.string().refine(v => !v || /^0\d{9}$/.test(v), { message: 'เบอร์ต้องเป็น 10 หลัก' }).optional().default(''),
   backupName: z.string().optional().default(''),
-  backupPhone: z.string().optional().default(''),
+  backupPhone: z.string().refine(v => !v || /^0\d{9}$/.test(v), { message: 'เบอร์ต้องเป็น 10 หลัก' }).optional().default(''),
   // Elder optional
   bloodType: z.string().optional().default(''),
   heightCm: z.union([z.number(), z.nan()]).optional(),

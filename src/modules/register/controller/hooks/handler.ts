@@ -190,9 +190,24 @@ export function useRegisterHandler(args: {
     else if (step === 'otp') await verifyOtp()
     else if (step === 'caregiver') await submitCaregiver()
     else if (step === 'consent') await submitConsent()
-    else if (step === 'elderBasic') gs.goto('elderHealth')
+    else if (step === 'elderBasic') {
+      const ok = await form.trigger([
+        'elderName',
+        'elderPhone',
+        'addressLine',
+        'district',
+        'province',
+        'postalCode',
+      ])
+      if (!ok) return
+      gs.goto('elderHealth')
+    }
     else if (step === 'elderHealth') gs.goto('elderEmergency')
-    else if (step === 'elderEmergency') gs.goto('elderOptional')
+    else if (step === 'elderEmergency') {
+      const ok = await form.trigger(['hospitalPhone', 'doctorPhone', 'backupPhone'])
+      if (!ok) return
+      gs.goto('elderOptional')
+    }
     else if (step === 'elderOptional') gs.goto('review')
     else if (step === 'review') await submitElder()
   }

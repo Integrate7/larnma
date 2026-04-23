@@ -4,7 +4,7 @@ import { resetServerState } from '../helpers/reset'
 
 test.describe('PDPA consent required', () => {
   test.beforeEach(async ({ baseURL }) => {
-    await resetServerState(baseURL ?? 'http://localhost:3000')
+    await resetServerState(baseURL ?? 'http://localhost:3100')
   })
 
   test('rejects consent step without both required toggles', async ({
@@ -20,6 +20,8 @@ test.describe('PDPA consent required', () => {
 
     // Try to advance WITHOUT toggling consents
     await page.getByTestId('consent-next').click()
-    await expect(page.getByText(/ยินยอม/)).toBeVisible()
+    await expect(
+      page.getByText('ต้องยินยอมทั้ง 2 ข้อเพื่อใช้งาน'),
+    ).toBeVisible()
   })
 })
