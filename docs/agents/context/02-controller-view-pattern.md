@@ -1,277 +1,254 @@
 # Controller-View Pattern (Agent Reference)
 
-This is the **primary design pattern** for all feature modules. Every new page or complex component MUST follow this pattern.
+The **primary design pattern** for every feature module under `src/modules/*`. `/self-review` rule A3 blocks anything that doesn't follow it.
 
-## Quick Decision: Which Level?
-
-```
-Does it fetch data from API or use Server Actions?
-├── YES → Level 1 (Page-Level)
-│   └── Does it have a form with validation?
-│       ├── YES → Level 1 + formHandler
-│       └── NO  → Level 1 (standard)
-├── NO, but has local UI state (tabs, toggles, etc.)?
-│   └── YES → Level 2 (Sub-Component)
-└── NO state at all?
-    └── Pure View (no controller, just props)
-```
-
-## Level 1: Page-Level (Full)
+## Quick Decision
 
 ```
-featurePage/
+Does it render a page or a dialog with real UI / data / side effects?
+├── YES → Level 1 (page-level)
+│        ├── Form with Zod validation?            → Level 1 + formHandler
+│        ├── Fetches server data?                 → + queryHandler
+│        └── SSE / interval subscriptions?        → + a subscription hook (e.g. eventStream)
+└── NO (pure presentation, props in → JSX out)  → no controller; just a view
+```
+
+## File Layout (canonical)
+
+```
+src/modules/<moduleName>/
+├── index.ts                    # re-exports <ModuleName>Page
+├── <moduleName>Page.tsx        # pure wiring: const { state, handler } = useController(); <View ... />
+├── types.ts                    # ALL types — GlobalState, Handler, view props — live here
+├── schema.ts                   # (optional) Zod schemas for form validation
 ├── controller/
-│   ├── controller.ts              # Orchestrator — composes hooks, returns flat API
-│   ├── actions.ts                 # Server Actions ('use server') → ActionResult<T>
+│   ├── controller.ts           # composes hooks in dependency order; returns { state, handler }
 │   └── hooks/
-│       ├── queryHandler.ts        # useQuery/useLazyQuery calls
-│       ├── globalState.ts         # useState + derived state
-│       └── handler.ts             # Event handlers (calls actions, updates state)
-├── views/                         # Presentation-only components (flat props)
-│   └── someView/
-├── types.ts                       # ALL types for every layer — single source of truth
-├── featurePage.tsx                 # Pure wiring: controller → views
-└── index.ts
+│       ├── __tests__/          # unit tests for each hook
+│       ├── globalState.ts      # useState + derived selectors — returns { state, set… }
+│       ├── formHandler.ts      # useForm + zodResolver — owns form state
+│       ├── queryHandler.ts     # fetcher() calls; reads/writes via gs.setX
+│       ├── eventStream.ts      # (or similar) EventSource subscription
+│       └── handler.ts          # user-action event handlers — always last
+└── views/                      # optional — sub-views with flat props
+    └── <viewName>/
 ```
 
-**Hook dependency chain (ALWAYS one direction, NEVER circular):**
-```
-globalState ──→ queryHandler ──→ handler
-```
-
-## Level 1 + formHandler (Forms with Validation)
-
-When a page/dialog includes a form with Zod validation, add `formHandler.ts` at the **top** of the chain:
+### Hook dependency chain (one direction, never circular)
 
 ```
-featureDialog/
-├── controller/
-│   ├── controller.ts              # Orchestrator — composes ALL hooks
-│   ├── actions.ts                 # Server Actions (if needed)
-│   └── hooks/
-│       ├── formHandler.ts         # ← NEW: useForm + Zod schema, owns form state
-│       ├── queryHandler.ts        # Fetches data (can depend on form values)
-│       ├── globalState.ts         # UI state (tabs, pagination, selections)
-│       └── handler.ts             # Event handlers (reads form via getValues/trigger)
-├── views/
-├── types.ts
-├── featureDialog.tsx
-└── index.ts
+formHandler ─→ globalState ─→ queryHandler ─→ (subscriptions) ─→ handler
 ```
 
-**Hook dependency chain with formHandler:**
+- `globalState` is the local store for the module — returns `{ state, setX, mutateY }`
+- `queryHandler` fetches and pushes into `globalState` setters; returns `{ reload }` only
+- `handler` is the only hook that mutates state via user actions; may call `queryHandler.reload` after a mutation
+
+## Real Example — `modules/dashboard/`
+
+```ts
+// src/modules/dashboard/controller/controller.ts
+'use client'
+import { useDashboardEventStream } from './hooks/eventStream'
+import { useDashboardGlobalState } from './hooks/globalState'
+import { useDashboardHandler } from './hooks/handler'
+import { useDashboardQueryHandler } from './hooks/queryHandler'
+
+export function useDashboardController() {
+  const gs = useDashboardGlobalState()
+  const { reload } = useDashboardQueryHandler(gs)
+  const handler = useDashboardHandler({ gs, reload })
+  useDashboardEventStream(gs)
+  return { state: gs.state, handler }
+}
 ```
-formHandler ──→ globalState ──→ queryHandler ──→ handler
-(react-hook-form   (UI state:      (fetches data     (event handlers,
- + zod schema,      tabs, search,   using form +      reads form via
- owns form data)    pagination)     globalState)      getValues/trigger)
+
+```ts
+// src/modules/dashboard/dashboardPage.tsx
+'use client'
+export function DashboardPage() {
+  const { state, handler } = useDashboardController()
+  return <DashboardView state={state} handler={handler} />
+}
 ```
 
-### formHandler.ts — Complete Pattern
+Note the exposed shape: `{ state, handler }`. Views receive **flat props** only (rule A7) — never the controller object itself, never `gs`, never `useXxxStore()`.
 
-**Reference:** `src/modules/releases/views/releasesListPage/views/createReleaseDialog/controller/hooks/formHandler.ts`
+## `globalState.ts` Pattern
 
-```typescript
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { useEffect } from 'react'
+```ts
+// src/modules/dashboard/controller/hooks/globalState.ts
+export function useDashboardGlobalState() {
+  const [events, setEvents] = useState<AudioEvent[]>([])
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  // … more useState slots …
 
-// 1. Define Zod schema
-export const createReleaseSchema = z.object({
-  name: z.string().min(1, 'Required'),
-  version: z.string().min(1, 'Required'),
-  description: z.string().optional().default(''),
+  const moodCounts = useMemo<Record<Mood, number>>(/* derived */, [events])
+
+  const state: DashboardGlobalState = { events, notifications, moodCounts, /* … */ }
+
+  // mutators returned alongside `state`
+  const prependEvent = (e: AudioEvent) =>
+    setEvents((prev) => (prev.some((x) => x.id === e.id) ? prev : [e, ...prev].slice(0, 50)))
+
+  return { state, prependEvent, /* … */ }
+}
+```
+
+Rules:
+- **`state` is a flat object** — that's what eventually reaches the view
+- **Mutator names describe intent** (`prependEvent`, `updateNotification`) — not setter names (`setEvents`)
+- **Derived values live in `useMemo`** — never recomputed in the view
+- **Types live in `types.ts`** (rule A6) — import them here, don't define inline
+
+## `queryHandler.ts` Pattern
+
+```ts
+// src/modules/dashboard/controller/hooks/queryHandler.ts
+export function useDashboardQueryHandler(gs: ReturnType<typeof useDashboardGlobalState>) {
+  const load = useCallback(async () => {
+    const [eventsRes, locationsRes, pairingsRes] = await Promise.all([
+      fetcher('/api/events', listSchema),
+      fetcher('/api/elders/location', locationsSchema),
+      fetcher('/api/pairings/me', pairingsSchema),
+    ])
+    if (eventsRes.success) gs.replaceAll(eventsRes.data.events, eventsRes.data.notifications)
+    else gs.setError(eventsRes.error)
+    if (locationsRes.success) gs.setLocations(locationsRes.data.locations)
+    if (pairingsRes.success) gs.setPairings(pairingsRes.data)
+  }, [gs])
+
+  useEffect(() => { void load() }, [load])
+  return { reload: load }
+}
+```
+
+Rules:
+- **Always use `fetcher()` from `src/services/adapter/fetcher.ts`** (rule A4) — never `fetch()` directly
+- **Always pass a Zod schema** — the fetcher validates the response and returns `ActionResult<T>`
+- **Return only `{ reload }`** — the data lives in `globalState`, not in this hook
+- **Kick off the initial load in a `useEffect`** with `void load()`
+
+## `handler.ts` Pattern
+
+```ts
+// src/modules/dashboard/controller/hooks/handler.ts
+export function useDashboardHandler(args: {
+  gs: ReturnType<typeof useDashboardGlobalState>
+  reload: () => Promise<void>
+}): DashboardHandler {
+  const ack = async (notificationId: string) => {
+    const res = await fetcher(
+      `/api/notifications/${notificationId}/ack`,
+      z.object({ locked: z.boolean(), lockedByCaregiverId: z.string().optional() }),
+      { method: 'POST', body: {} },
+    )
+    if (res.success) args.gs.updateNotification(notificationId, { ackAt: new Date().toISOString(), lockedByCaregiverId: res.data.lockedByCaregiverId })
+    else args.gs.setError(res.error)
+  }
+
+  return { ack, order, reload: args.reload }
+}
+```
+
+Rules:
+- **Accept `Pick<>` of the dependencies you need** (rule A8) — keeps the handler trivially testable
+- **Handler functions are `async` and void-returning** — don't bubble `ActionResult`s up to the view
+- **Return type is declared in `types.ts`** as `ModuleHandler` — import it here
+
+## Level 1 + `formHandler.ts` (Forms with Zod)
+
+Real example: `src/modules/register/` (multi-step OTP + profile flow).
+
+```ts
+// src/modules/register/controller/hooks/formHandler.ts
+export const registerSchema = z.object({
+  phone: z.string().min(9, 'required'),
+  code: z.string().length(6, '6 digits'),
+  name: z.string().min(1),
+  email: z.string().email().optional().or(z.literal('')),
 })
+export type RegisterFormValues = z.infer<typeof registerSchema>
 
-// 2. Infer type from schema
-export type CreateReleaseFormValues = z.infer<typeof createReleaseSchema>
-
-// 3. Hook owns useForm + handles reset on mode change
-export function useCreateReleaseFormHandler(props: Props) {
-  const form = useForm<CreateReleaseFormValues>({
-    resolver: zodResolver(createReleaseSchema),
-    defaultValues: { name: '', version: '', description: '' },
+export function useRegisterFormHandler() {
+  const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { phone: '', code: '', name: '', email: '' },
   })
-
-  // Reset form when dialog opens/closes or mode changes (create vs edit)
-  useEffect(() => {
-    if (props.open) {
-      if (props.mode === 'edit' && props.initialValues) {
-        form.reset(props.initialValues)
-      } else {
-        form.reset({ name: '', version: '', description: '' })
-      }
-    }
-  }, [props.open, props.mode])
-
   return { form }
 }
 ```
 
-### Key formHandler Rules
+Chain:
+```
+formHandler → globalState (step, loading, error) → queryHandler (lookup) → handler (sendOtp, verify, submit)
+```
 
-1. **formHandler owns ALL form state** — the Zod schema, `useForm()` call, and default values
-2. **formHandler resets on mode change** — use `useEffect` to reset when dialog opens/switches between create/edit
-3. **handler reads form via `getValues`/`trigger`** — handler does NOT own form state, it reads from formHandler
-4. **queryHandler can depend on form values** — e.g., fetch suggestions based on form input
-5. **Only one formHandler per controller** — if you need multiple forms, consider splitting into sub-components
+Handlers read form values via `form.getValues()` and trigger validation with `form.trigger('fieldName')`. The handler never owns form state.
 
-## Level 2: Sub-Component
+## Level 2 (Sub-Component with Local State)
+
+When a view needs its own UI state but no API calls, nest a smaller controller **inside the view** — same shape, no `queryHandler`, no `actions`:
 
 ```
-editorContent/
+views/<subView>/
 ├── controller/
 │   ├── controller.ts
 │   └── hooks/
-│       ├── globalState.ts         # Local UI state only
-│       └── handler.ts             # UI event handlers
-├── editorContent.tsx
-├── types.ts
-└── index.ts
+│       ├── globalState.ts
+│       └── handler.ts
+├── <subView>.tsx
+└── types.ts
 ```
 
-**Simpler chain (no queryHandler, no actions.ts):**
-```
-globalState ──→ handler
-```
+## Server Actions
 
-## Controller Pattern Templates
+Larnma currently favours API routes + `fetcher()` over Next Server Actions, but where you use a server action keep it under `controller/actions.ts` and return `ActionResult<T>` (rule A9):
 
-### controller.ts (Page-Level)
-```typescript
-export function useFeaturePageController(id: string) {
-  const globalState = useGlobalState(id)
-  const query = useQueryHandler(id, { globalState })
-  const handler = useHandler({ id, globalState })
-  return { globalState, query, handler }
-}
-```
-
-### controller.ts (with formHandler)
-```typescript
-export function useCreateDialogController(props: Props) {
-  const { form } = useFormHandler(props)
-  const globalState = useGlobalState()
-  const query = useQueryHandler(props.open, { form, globalState })
-  const handler = useHandler({ props, form, globalState, query })
-  return { form, globalState, query, handler }
-}
-```
-
-### actions.ts (Server Actions)
-```typescript
+```ts
 'use server'
-type ActionResult<T> =
-  | { success: true; data: T; error: null }
-  | { success: false; data: null; error: string; errorCode?: string }
+import type { ActionResult } from '@/shared/types'
 
-export async function myAction(params: Params): Promise<ActionResult<ResponseType>> {
+export async function submitInvite(token: string): Promise<ActionResult<{ elderId: string }>> {
   try {
-    const result = await mutationInstances.resource.method(params)
-    return { success: true, data: result, error: null }
+    // call service code — repository, notifications, etc.
+    return { success: true, data: { elderId }, error: null }
   } catch (e) {
     return { success: false, data: null, error: String(e) }
   }
 }
 ```
 
-### Main component (pure wiring)
-```typescript
-export function FeaturePage({ id }: Props) {
-  const { globalState, query, handler } = useFeaturePageController(id)
-  return (
-    <SomeView
-      data={query.data}
-      isLoading={query.isLoading}
-      onAction={handler.handleAction}
-    />
-  )
-}
-```
+## Key Rules Checklist (self-review will flag any miss)
 
-## Key Rules Checklist
+- [ ] `types.ts` is the single source of truth (A6) — no types defined inline in hooks
+- [ ] Main page is pure wiring — no logic beyond destructuring the controller and passing props to the view
+- [ ] Views receive flat props only (A7) — no `gs`, no `useStore()`, no controller object
+- [ ] Handler props declared via `Pick<GlobalState, …>` or a small typed struct (A8)
+- [ ] `fetcher()` for every client-side call (A4)
+- [ ] `'use client'` on the main page and controller where needed — server pages should only glue the client page in
+- [ ] Handlers catch errors and push them to `gs.setError(...)` (or equivalent) — never let exceptions surface to the view
+- [ ] Hooks are named `use…` and each lives in its own file under `controller/hooks/`
 
-- [ ] `types.ts` is the single source of truth — every layer's contract lives here
-- [ ] **ALL types** (hook props, return types, controller types) MUST be defined in `types.ts` — NEVER define types inline in hook files or controller files. Hook files should `import type { ... } from '../../types'`
-- [ ] Handler props use `Pick<GlobalState, ...>` to declare exact dependencies
-- [ ] Views receive flat props only — no controller/store awareness
-- [ ] Hook chain flows one direction — never circular
-- [ ] Server Actions return `ActionResult<T>`
-- [ ] Main component is pure wiring — destructure controller, pass to views
-- [ ] Sub-components can nest their own controller when they have local state
+## When to Use What
 
-## When to Use What (Quick Matrix)
+| Situation | Pattern | `formHandler` | `queryHandler` | `actions.ts` | Subscriptions |
+|---|---|:-:|:-:|:-:|:-:|
+| Page that fetches + mutates | Level 1 | — | Yes | Optional | — |
+| Page with live SSE feed | Level 1 | — | Yes | — | Yes (`eventStream.ts`) |
+| Form / dialog with Zod | Level 1 + formHandler | Yes | Sometimes | Rare | — |
+| Sub-component with local UI state only | Level 2 | — | — | — | — |
+| Pure presentational | no controller | — | — | — | — |
 
-| Situation | Pattern | Has formHandler? | Has queryHandler? | Has actions.ts? |
-|-----------|---------|:----------------:|:-----------------:|:---------------:|
-| Page with API calls + mutations | Level 1 (full) | No | Yes | Yes |
-| Form dialog with validation + API calls | Level 1 + formHandler | Yes | Yes | No (uses parent) |
-| Complex component with Zustand store access | Level 1 (no actions) | No | No | No |
-| Sub-component with local UI state | Level 2 | No | No | No |
-| Simple presentational view | No controller | No | No | No |
+## Reference Modules
 
-## Nested Structure (Real Example)
-
-Page-level and sub-component-level controllers compose recursively:
-
-```
-workflowDetailPage/                        ← Level 1 (page)
-├── controller/
-│   ├── actions.ts                         ← Server Actions
-│   ├── hooks/queryHandler.ts              ← Data fetching
-│   ├── hooks/globalState.ts               ← State + derived data
-│   └── hooks/handler.ts                   ← Handlers call actions
-├── views/
-│   └── draftsTab/                         ← Presentation view
-
-releaseDetailPage/                         ← Level 1 (page)
-├── controller/
-│   ├── hooks/queryHandler.ts              ← getReleaseDetail, verify, publish
-│   ├── hooks/globalState.ts               ← release, artifacts, dialog states
-│   └── hooks/handler.ts                   ← handleVerify, handlePublish, handleExport
-└── views/
-    ├── workflowsTab/                      ← Artifact list
-    └── verificationTab/                   ← Nested controller
-        ├── controller/hooks/globalState.ts ← { expandedArtifacts }
-        └── views/checkStatusBadge.tsx     ← Pure view
-
-releasesListPage/                          ← Level 1 (page)
-├── controller/
-│   ├── actions.ts                         ← CRUD releases
-│   ├── hooks/queryHandler.ts              ← getReleases (paginated)
-│   └── hooks/handler.ts                   ← handleCreate, handleDelete
-└── views/
-    └── createReleaseDialog/               ← Level 1 + formHandler (multi-step)
-        ├── controller/
-        │   ├── hooks/formHandler.ts       ← Zod validation
-        │   ├── hooks/globalState.ts       ← step, selectedArtifacts
-        │   ├── hooks/queryHandler.ts      ← Fetch artifacts for selection
-        │   └── hooks/handler.ts           ← handleNext, handleBack, handleSubmit
-        └── views/selectableItemTable.tsx  ← Checkbox table
-
-nodeConfigPanel/                           ← Level 1 (page)
-├── controller/hooks/globalState.ts        ← activeTab, fullscreen, editorRefs
-├── views/
-│   └── inputTab/views/
-│       └── inputMappingEditor/            ← Owns refs, registers providers
-│           └── views/
-│               ├── editorContent/         ← Level 2 (sub-component)
-│               │   ├── controller/hooks/globalState.ts  ← { showVariables }
-│               │   └── controller/hooks/handler.ts      ← { handleToggle }
-│               └── fullscreenDialog/      ← Pure view (no controller)
-```
-
-## Real Examples in Codebase
-
-| Module | Pattern | Reference Path |
-|--------|---------|---------------|
-| Workflow Detail | Level 1 (full) | `src/modules/workflows/views/workflowDetailPage/` |
-| Create Release Dialog | Level 1 + formHandler | `src/modules/releases/views/releasesListPage/views/createReleaseDialog/` |
-| Release Detail | Level 1 (full) | `src/modules/releases/views/releaseDetailPage/` |
-| Releases List | Level 1 (full) | `src/modules/releases/views/releasesListPage/` |
-| Deployment Page | Level 1 (tabbed) | `src/modules/deployment/views/deploymentPage/` |
-| Deployment Tab | Level 1 (no actions) | `src/modules/deployment/views/deploymentPage/views/deploymentTab/` |
-| Deployment Detail | Level 1 (full) | `src/modules/deployment/views/deploymentDetailPage/` |
-| Editor Content | Level 2 | `.../nodeConfigPanel/views/inputTab/views/inputMappingEditor/views/editorContent/` |
-| Fullscreen Dialog | Pure view | `.../inputMappingEditor/views/fullscreenDialog/` |
+| Module | Shape | Reason |
+|---|---|---|
+| `dashboard/` | Level 1 + `eventStream` | Live SSE + fetch + multiple mutations |
+| `elderHome/` | Level 1 + `wakeWord` + `elderEventStream` | Voice capture + push + upload handler |
+| `register/` | Level 1 + `formHandler` | Multi-step OTP + profile with Zod |
+| `inviteLanding/` | Level 1 + `formHandler` | Token fetch + accept action |
+| `elderProfile/` | Level 1 + `formHandler` | View mode + edit mode + PATCH |
+| `elderMe/` | Level 1 (no handler, read-only) | Fetch-only |
+| `elderFood/` | Level 1 | Fetch menus + create food request |
+| `pair/` | Level 1 (no `queryHandler`) | Device-side consume POST only |
