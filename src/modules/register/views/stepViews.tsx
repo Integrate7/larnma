@@ -356,20 +356,20 @@ export function ElderEmergencyStep({ form, onNext, onBack }: StepProps) {
           <FormField label="โรงพยาบาล">
             <Input {...form.register('hospitalName')} placeholder="ชื่อ รพ." />
           </FormField>
-          <FormField label="เบอร์">
-            <Input {...form.register('hospitalPhone')} />
+          <FormField label="เบอร์" error={form.formState.errors.hospitalPhone?.message}>
+            <Input {...form.register('hospitalPhone')} type="tel" inputMode="numeric" />
           </FormField>
           <FormField label="หมอประจำ">
             <Input {...form.register('doctorName')} />
           </FormField>
-          <FormField label="เบอร์หมอ">
-            <Input {...form.register('doctorPhone')} />
+          <FormField label="เบอร์หมอ" error={form.formState.errors.doctorPhone?.message}>
+            <Input {...form.register('doctorPhone')} type="tel" inputMode="numeric" />
           </FormField>
           <FormField label="ญาติสำรอง">
             <Input {...form.register('backupName')} />
           </FormField>
-          <FormField label="เบอร์ญาติ">
-            <Input {...form.register('backupPhone')} />
+          <FormField label="เบอร์ญาติ" error={form.formState.errors.backupPhone?.message}>
+            <Input {...form.register('backupPhone')} type="tel" inputMode="numeric" />
           </FormField>
         </div>
         <div className="flex gap-2">
