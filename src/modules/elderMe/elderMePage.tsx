@@ -14,8 +14,13 @@ export function ElderMePage() {
   const { state } = useElderMeController()
 
   return (
-    <main className="elder-mode mx-auto flex max-w-xl flex-col gap-4 p-6">
-      <h1 className="text-3xl font-bold">{t('elder.myInfo')}</h1>
+    <main className="elder-mode mx-auto flex min-h-screen max-w-xl flex-col gap-4 px-5 py-6">
+      <header className="border-b border-[var(--rule)] pb-3">
+        <div className="mono-label">ข้อมูลของฉัน</div>
+        <h1 className="mt-1 text-xl font-semibold tracking-tight">
+          {state.data?.name ?? t('elder.myInfo')}
+        </h1>
+      </header>
 
       {state.loading ? (
         <div className="flex flex-col gap-3">
@@ -34,7 +39,7 @@ export function ElderMePage() {
         <div className="flex flex-col gap-3">
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">{state.data.name}</CardTitle>
+              <CardTitle className="mono-label">ติดต่อ</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-xl">
@@ -48,7 +53,7 @@ export function ElderMePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>โรคประจำตัว</CardTitle>
+              <CardTitle className="mono-label">โรคประจำตัว</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-2">
               {state.data.conditions.length === 0 ? (
@@ -65,7 +70,7 @@ export function ElderMePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>ยาที่ทาน</CardTitle>
+              <CardTitle className="mono-label">ยาที่ทาน</CardTitle>
             </CardHeader>
             <CardContent>
               {state.data.medications.length === 0 ? (
@@ -84,7 +89,7 @@ export function ElderMePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>แพ้อะไร</CardTitle>
+              <CardTitle className="mono-label">แพ้อะไร</CardTitle>
             </CardHeader>
             <CardContent>
               {state.data.allergies.length === 0 ? (
@@ -103,7 +108,7 @@ export function ElderMePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>ที่อยู่</CardTitle>
+              <CardTitle className="mono-label">ที่อยู่</CardTitle>
             </CardHeader>
             <CardContent className="text-xl">
               {state.data.addressLine} {state.data.district} {state.data.province}{' '}
