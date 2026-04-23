@@ -31,5 +31,5 @@ export function useElderFoodQueryHandler(gs: GlobalStateSetter) {
       }
       gs.setLoading(false)
     })
-  }, [])
+  }, [gs.setMenus, gs.setLoading, gs.setError])
 }

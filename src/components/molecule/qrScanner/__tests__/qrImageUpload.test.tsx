@@ -2,7 +2,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { QrImageUpload } from '../qrImageUpload'
 import { useTranslations } from 'next-intl'
 
-import { BrowserQRCodeReader } from '@zxing/browser'
 
 const decodeFromImageElement = jest.fn()
 const decodeFromCanvas = jest.fn()
@@ -30,7 +29,7 @@ describe('QrImageUpload', () => {
 
   beforeAll(() => {
     originalImage = global.Image
-    // @ts-ignore - Mocking Image for JSDOM
+    // @ts-expect-error - Mocking Image for JSDOM
     global.Image = class {
       onload: () => void = () => {}
       onerror: () => void = () => {}
@@ -53,7 +52,9 @@ describe('QrImageUpload', () => {
 
   beforeEach(() => {
     ;(useTranslations as jest.Mock).mockReturnValue(mockT)
-    global.URL.createObjectURL = jest.fn((file) => (file.name === 'error.png' ? 'error-url' : 'blob:url'))
+    global.URL.createObjectURL = jest.fn((file) =>
+      file instanceof File && file.name === 'error.png' ? 'error-url' : 'blob:url',
+    )
     global.URL.revokeObjectURL = jest.fn()
   })
 

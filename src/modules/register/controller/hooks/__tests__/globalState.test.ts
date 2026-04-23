@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { useRegisterGlobalState } from '../globalState'
 
-const mockGetParam = jest.fn(() => null)
+const mockGetParam = jest.fn((_key: string): string | null => null)
 
 jest.mock('next/navigation', () => ({
   useSearchParams: () => ({ get: mockGetParam }),
