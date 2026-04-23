@@ -87,6 +87,7 @@ export function useDashboardQueryHandler(gs: GS) {
     if (pairingsRes.success) {
       gs.setPairings(pairingsRes.data)
     }
+    // pairings fetch failure is intentionally silent — hides invite button (pairings stays [])
   }, [gs])
 
   useEffect(() => {

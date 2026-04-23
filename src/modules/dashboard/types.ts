@@ -3,13 +3,10 @@ import type {
   ElderLocation,
   Mood,
   Notification,
+  Pairing,
 } from '@/shared/types'
 
-export type PairingInfo = {
-  id: string
-  elderId: string
-  isPrimary: boolean
-}
+export type PairingInfo = Pick<Pairing, 'id' | 'elderId' | 'isPrimary'>
 
 export type DashboardGlobalState = {
   events: AudioEvent[]
