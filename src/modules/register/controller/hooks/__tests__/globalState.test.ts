@@ -1,14 +1,31 @@
-import { act, renderHook } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { useRegisterGlobalState } from '../globalState'
 
+const mockGetParam = jest.fn(() => null)
+
+jest.mock('next/navigation', () => ({
+  useSearchParams: () => ({ get: mockGetParam }),
+}))
+
 describe('useRegisterGlobalState', () => {
+  beforeEach(() => {
+    mockGetParam.mockReturnValue(null)
+  })
+
   it('starts at welcome step', () => {
     const { result } = renderHook(() => useRegisterGlobalState())
     expect(result.current.state.step).toBe('welcome')
   })
 
-  it('advance walks through steps', () => {
+  it('advance walks from welcome to choice', () => {
     const { result } = renderHook(() => useRegisterGlobalState())
+    act(() => result.current.advance())
+    expect(result.current.state.step).toBe('choice')
+  })
+
+  it('advance walks from choice to phone', () => {
+    const { result } = renderHook(() => useRegisterGlobalState())
+    act(() => result.current.goto('choice'))
     act(() => result.current.advance())
     expect(result.current.state.step).toBe('phone')
   })
@@ -44,5 +61,30 @@ describe('useRegisterGlobalState', () => {
     expect(result.current.state.pairingToken).toBe('tok')
     expect(result.current.state.submitting).toBe(true)
     expect(result.current.state.errorMessage).toBe('err')
+  })
+
+  describe('fromGoogle flow', () => {
+    it('skips to phone step when ?from=google is present', async () => {
+      mockGetParam.mockImplementation((key: string) =>
+        key === 'from' ? 'google' : null,
+      )
+      const { result } = renderHook(() => useRegisterGlobalState())
+      await waitFor(() => {
+        expect(result.current.state.step).toBe('phone')
+      })
+    })
+
+    it('stays at welcome when ?from param is absent', () => {
+      const { result } = renderHook(() => useRegisterGlobalState())
+      expect(result.current.state.step).toBe('welcome')
+    })
+
+    it('stays at welcome when ?from is not google', () => {
+      mockGetParam.mockImplementation((key: string) =>
+        key === 'from' ? 'other' : null,
+      )
+      const { result } = renderHook(() => useRegisterGlobalState())
+      expect(result.current.state.step).toBe('welcome')
+    })
   })
 })

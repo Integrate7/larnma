@@ -8,8 +8,9 @@ type GS = ReturnType<typeof useRegisterGlobalState>
 export function useRegisterHandler(args: {
   form: RegisterForm
   gs: GS
+  navigate?: (url: string) => void
 }): RegisterHandler {
-  const { form, gs } = args
+  const { form, gs, navigate = (url) => window.location.assign(url) } = args
 
   const setBusy = (b: boolean) => gs.setSubmitting(b)
   const setErr = (m: string | null) => gs.setErrorMessage(m)
@@ -214,9 +215,14 @@ export function useRegisterHandler(args: {
     gs.setPairingToken(res.data.token)
   }
 
+  const onGoogle = () => {
+    navigate('/api/auth/google')
+  }
+
   const next = async () => {
     const step = gs.state.step
-    if (step === 'welcome') gs.goto('phone')
+    if (step === 'welcome') gs.goto('choice')
+    else if (step === 'choice') gs.goto('phone')
     else if (step === 'phone') await sendOtp()
     else if (step === 'otp') await verifyOtp()
     else if (step === 'caregiver') await submitCaregiver()
@@ -243,6 +249,7 @@ export function useRegisterHandler(args: {
   return {
     next,
     back: gs.back,
+    onGoogle,
     sendOtp,
     verifyOtp,
     submitCaregiver,

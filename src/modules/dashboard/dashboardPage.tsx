@@ -80,23 +80,47 @@ export function DashboardPage() {
         </CardHeader>
         <CardContent>
           <ul className="flex flex-col divide-y" data-testid="dashboard-notis">
-            {state.notifications.map((n) => (
-              <li key={n.id} className="flex items-center gap-3 py-2">
-                <PriorityBadge priority={n.priority} />
-                <span className="flex-1 text-sm">{n.eventId}</span>
-                {n.ackAt ? (
-                  <span className="text-xs text-muted-foreground">ackแล้ว</span>
-                ) : (
-                  <Button
-                    size="sm"
-                    onClick={() => void handler.ack(n.id)}
-                    data-testid={`ack-${n.id}`}
-                  >
-                    {t('emergency.handleIt')}
-                  </Button>
-                )}
-              </li>
-            ))}
+            {state.notifications.map((n) => {
+              const event = state.events.find((e) => e.id === n.eventId)
+              const isHungry = event?.intent === 'HUNGRY'
+              const alreadyOrdered = event ? state.orderedEventIds.includes(event.id) : false
+              const notiKey = n.id
+              return (
+                <li key={notiKey} className="flex items-center gap-3 py-2">
+                  <PriorityBadge priority={n.priority} />
+                  <span className="flex-1 text-sm">
+                    {event?.summary ?? n.eventId}
+                    {isHungry && event ? (
+                      <span className="ml-2 text-muted-foreground">
+                        ฿{(event.entities as { price?: number }).price ?? '-'}
+                      </span>
+                    ) : null}
+                  </span>
+                  {!n.ackAt ? (
+                    <Button
+                      size="sm"
+                      onClick={() => void handler.ack(n.id)}
+                      data-testid={`ack-${n.id}`}
+                    >
+                      {t('emergency.handleIt')}
+                    </Button>
+                  ) : isHungry && !alreadyOrdered ? (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => void handler.order(n, state.events)}
+                      data-testid={`order-${n.id}`}
+                    >
+                      {t('food.pay')}
+                    </Button>
+                  ) : alreadyOrdered ? (
+                    <span className="text-xs text-green-600">{t('food.paid')}</span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">ackแล้ว</span>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         </CardContent>
       </Card>

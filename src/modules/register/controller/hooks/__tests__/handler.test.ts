@@ -3,6 +3,10 @@ import { useRegisterFormHandler } from '../formHandler'
 import { useRegisterGlobalState } from '../globalState'
 import { useRegisterHandler } from '../handler'
 
+jest.mock('next/navigation', () => ({
+  useSearchParams: () => ({ get: jest.fn(() => null) }),
+}))
+
 type Json = { status: number; body: unknown }
 
 function mockFetchSequence(seq: Json[]) {
@@ -18,26 +22,66 @@ function mockFetchSequence(seq: Json[]) {
   })
 }
 
+const mockNavigate = jest.fn()
+
 function renderHandler() {
   return renderHook(() => {
     const { form } = useRegisterFormHandler()
     const gs = useRegisterGlobalState()
-    const handler = useRegisterHandler({ form, gs })
+    const handler = useRegisterHandler({ form, gs, navigate: mockNavigate })
     return { form, gs, handler }
   })
 }
 
 describe('useRegisterHandler', () => {
+  beforeEach(() => {
+    mockNavigate.mockClear()
+  })
+
   afterEach(() => {
     jest.restoreAllMocks()
   })
 
+  // ─── Google login ────────────────────────────────────────────────────────────
+
+  describe('onGoogle', () => {
+    it('navigates to /api/auth/google', () => {
+      const { result } = renderHandler()
+      act(() => {
+        result.current.handler.onGoogle()
+      })
+      expect(mockNavigate).toHaveBeenCalledWith('/api/auth/google')
+    })
+  })
+
+  // ─── Step navigation ─────────────────────────────────────────────────────────
+
+  it('next: welcome → choice', async () => {
+    const { result } = renderHandler()
+    await act(async () => {
+      await result.current.handler.next()
+    })
+    expect(result.current.gs.state.step).toBe('choice')
+  })
+
+  it('next: choice → phone (standard path)', async () => {
+    const { result } = renderHandler()
+    act(() => result.current.gs.goto('choice'))
+    await act(async () => {
+      await result.current.handler.next()
+    })
+    expect(result.current.gs.state.step).toBe('phone')
+  })
+
+  // ─── OTP flow ────────────────────────────────────────────────────────────────
+
   it('sendOtp: invalid phone stops at trigger', async () => {
     const { result } = renderHandler()
+    act(() => result.current.gs.goto('phone'))
     await act(async () => {
       await result.current.handler.sendOtp()
     })
-    expect(result.current.gs.state.step).toBe('welcome')
+    expect(result.current.gs.state.step).toBe('phone')
   })
 
   it('sendOtp: happy path advances to otp + stores ref', async () => {
@@ -269,7 +313,7 @@ describe('useRegisterHandler', () => {
     expect(result.current.gs.state.qrDataUrl).toBeNull()
   })
 
-  it('next: walks through the happy path', async () => {
+  it('next: walks through the full happy path (including choice step)', async () => {
     mockFetchSequence([
       // sendOtp
       { status: 200, body: { ref: 'R', expiresAt: new Date().toISOString() } },
@@ -297,52 +341,68 @@ describe('useRegisterHandler', () => {
       result.current.form.setValue('province', 'p')
       result.current.form.setValue('postalCode', '10100')
     })
-    // welcome → phone
+
+    // welcome → choice
+    await act(async () => {
+      await result.current.handler.next()
+    })
+    expect(result.current.gs.state.step).toBe('choice')
+
+    // choice → phone (standard path)
     await act(async () => {
       await result.current.handler.next()
     })
     expect(result.current.gs.state.step).toBe('phone')
 
+    // phone → otp
     await act(async () => {
       await result.current.handler.next()
     })
     expect(result.current.gs.state.step).toBe('otp')
 
+    // otp → caregiver
     await act(async () => {
       await result.current.handler.next()
     })
     expect(result.current.gs.state.step).toBe('caregiver')
 
+    // caregiver → consent
     await act(async () => {
       await result.current.handler.next()
     })
     expect(result.current.gs.state.step).toBe('consent')
 
+    // consent → elderBasic
     await act(async () => {
       await result.current.handler.next()
     })
     expect(result.current.gs.state.step).toBe('elderBasic')
 
+    // elderBasic → elderHealth
     await act(async () => {
       await result.current.handler.next()
     })
     expect(result.current.gs.state.step).toBe('elderHealth')
 
+    // elderHealth → elderEmergency
     await act(async () => {
       await result.current.handler.next()
     })
     expect(result.current.gs.state.step).toBe('elderEmergency')
 
+    // elderEmergency → elderOptional
     await act(async () => {
       await result.current.handler.next()
     })
     expect(result.current.gs.state.step).toBe('elderOptional')
 
+    // elderOptional → review
     await act(async () => {
       await result.current.handler.next()
     })
     expect(result.current.gs.state.step).toBe('review')
 
+    // review → qr
     await act(async () => {
       await result.current.handler.next()
     })
