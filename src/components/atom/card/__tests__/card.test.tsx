@@ -30,4 +30,23 @@ describe('Card', () => {
     const { container } = render(<Card className="x-class">b</Card>)
     expect(container.firstChild).toHaveClass('x-class')
   })
+
+  it('applies accent="log" with green left border', () => {
+    const { container } = render(<Card accent="log">l</Card>)
+    const el = container.firstChild as HTMLElement
+    expect(el.dataset.accent).toBe('log')
+    expect(el.className).toContain('border-l-[3px]')
+  })
+
+  it('applies accent="normal" with brand left border', () => {
+    const { container } = render(<Card accent="normal">n</Card>)
+    const el = container.firstChild as HTMLElement
+    expect(el.dataset.accent).toBe('normal')
+  })
+
+  it('applies accent="crit" with danger wash background', () => {
+    const { container } = render(<Card accent="crit">c</Card>)
+    const el = container.firstChild as HTMLElement
+    expect(el.dataset.accent).toBe('crit')
+  })
 })
