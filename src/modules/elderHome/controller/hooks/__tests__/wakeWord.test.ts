@@ -86,12 +86,12 @@ describe('useWakeWord', () => {
     expect(result.current.gs.gs.micState).toBe('wakeListening')
   })
 
-  it('fires onWake when transcript contains "หลานม่า"', () => {
+  it('fires onWake when transcript contains "หลานรัก"', () => {
     installSR()
     const onWake = jest.fn()
     renderWake(onWake)
     act(() => {
-      MockSR.instances[0].fireResult('หลานม่า ช่วยหน่อย')
+      MockSR.instances[0].fireResult('หลานรัก ช่วยหน่อย')
     })
     expect(onWake).toHaveBeenCalledTimes(1)
   })

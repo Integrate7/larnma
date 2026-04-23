@@ -13,7 +13,7 @@ const STATE_CLASS: Record<MicButtonState, string> = {
 
 const LABEL_DEFAULT: Record<MicButtonState, string> = {
   idle: 'แตะเพื่อพูด',
-  wakeListening: 'พูด "หลานม่า" ได้เลย',
+  wakeListening: 'พูด "หลานรัก" ได้เลย',
   listening: 'กำลังฟัง...',
   uploading: 'กำลังส่ง...',
   done: 'เรียบร้อย',

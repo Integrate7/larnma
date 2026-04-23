@@ -3,7 +3,7 @@ import type { useElderHomeGlobalState } from './globalState'
 
 type GS = ReturnType<typeof useElderHomeGlobalState>
 
-const KEYWORD_RE = /หลาน\s*ม่า|หลานมา|หลานม้า/
+const KEYWORD_RE = /หลาน\s*รัก|ลานรัก/
 
 type SRResult = { 0: { transcript: string }; isFinal: boolean }
 type SREvent = { resultIndex: number; results: ArrayLike<SRResult> }
