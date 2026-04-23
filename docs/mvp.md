@@ -214,6 +214,102 @@ POST   /consents              { items: [{type, granted}] }
 - **Refresh rotation** — ทุก refresh ออก token ใหม่ + revoke เก่า (detect theft)
 - **Origin check** — บน mutating requests (state-changing POST/PATCH/DELETE)
 
+### 3.10 Elder Profile Management
+
+#### 3.10.1 Principles
+
+- **Caregiver app** — ดูและแก้ไข profile ได้ (gate ด้วย permission `edit_elder_profile`)
+- **Elder app** — มีหน้า "ข้อมูลของฉัน" (read-only, ฟอนต์ใหญ่, ปุ่มโทรลูกหลานตรง one-tap)
+- **No audit log** ใน MVP (Q4) — decisions track ผ่าน `pairings.permissions` + timestamps เฉพาะ critical actions
+- **Soft-delete (PDPA)** — ลบ Elder = mark deleted, hard-delete หลัง 7 วัน (คืนได้ก่อนครบ)
+
+#### 3.10.2 Caregiver App — View Page
+
+**Route:** `/caregiver/elders/:id`
+
+```
+Header: รูป + ชื่อ + อายุ + ความสัมพันธ์
+
+Sections (collapsible):
+├─ Basic       (ชื่อ, วันเกิด, เบอร์, ที่อยู่, รูป)
+├─ Health      (โรคประจำตัว chips, symptoms, medications+time, allergies)
+├─ Emergency   (hospital_contact, doctor_contact, backup_relative)
+└─ Optional    (blood_type, height/weight → BMI, food_preferences, food_dislikes)
+
+Action bar (conditional):
+├─ [แก้ไขข้อมูล]    → ถ้า pairing.permissions.edit_elder_profile
+├─ [จัดการผู้ดูแล]  → Primary only (ไปหน้า permission toggle)
+├─ [โอน Primary]    → Primary only (confirm 2x, irrevocable 24 ชม.)
+└─ [ลบ Elder]       → Primary only (soft-delete + lock 7 วัน)
+```
+
+#### 3.10.3 Caregiver App — Edit Page (Full Page, Q2: B)
+
+**Route:** `/caregiver/elders/:id/edit`
+
+- Form เดียวยาว scroll ได้, แยก 4 sections ตาม register wizard
+- Sticky bottom bar: `[บันทึก]` `[ยกเลิก]`
+- Client-side validation → submit `PATCH /elders/:id` ทั้ง payload หรือ per-section
+
+**Field-level rules (Q3):**
+
+| Field | Rule |
+|---|---|
+| Phone (Elder) | แก้ได้ไม่ต้อง OTP (Elder ไม่ login — phone ใช้เฉพาะ emergency fallback call) |
+| Address | ถ้ามี order status ∈ `{preparing, delivering}` → warn "ที่อยู่ใหม่จะมีผลกับ order ถัดไปเท่านั้น" |
+| Conditions / Medications / Allergies | แก้ได้อิสระ (สำคัญต่อ AI food recommendation) |
+| Transfer Primary | ต้อง confirm 2 ขั้น, set `primary_transferred_at = now()`, block การโอนซ้ำ 24 ชม. |
+| Delete Elder | confirm + `deleted_at = now()`, `hard_delete_after = now() + 7d`, Primary กู้คืนได้ก่อนครบ |
+
+#### 3.10.4 Elder App — "ข้อมูลของฉัน" (Read-only)
+
+**Access:** ปุ่มไอคอน 👤 มุมบนซ้ายของ home screen (ขนาดใหญ่, contrast สูง)
+
+**Route:** `/elder/me`
+
+```
+ฟอนต์ 24-28px, high contrast, ปุ่มขนาดใหญ่
+├─ รูป + ชื่อ + อายุ
+├─ โรคประจำตัว (chips ใหญ่)
+├─ ยาที่ทาน + เวลา (list)
+├─ แพ้อะไร (list)
+├─ ที่อยู่ (ไว้ยืนยันเวลาสั่งอาหาร)
+└─ เบอร์ลูกหลาน (one-tap call ผ่าน `tel:` link)
+
+ปุ่ม [← กลับหน้าหลัก] ใหญ่ล่างสุด
+```
+
+#### 3.10.5 New API Endpoints
+
+```
+# Profile CRUD
+GET    /elders/:id                                    (caregiver-authorized)
+PATCH  /elders/:id                { section, fields }  (permission: edit_elder_profile)
+
+# Primary transfer
+POST   /elders/:id/transfer-primary  { to_caregiver_id }  (Primary only, 24h cooldown)
+
+# Soft delete / restore (PDPA)
+DELETE /elders/:id                                         (Primary only → soft delete)
+POST   /elders/:id/restore                                (Primary only, within 7 days)
+
+# Elder-side (device cookie)
+GET    /elder/me                                          (read-only, uses device_session)
+```
+
+#### 3.10.6 Data Model Additions
+
+```sql
+-- elder_profiles: add soft-delete columns
+elder_profiles  ADD COLUMN deleted_at         TIMESTAMP NULL;
+elder_profiles  ADD COLUMN hard_delete_after  TIMESTAMP NULL;
+-- cron: DELETE FROM users WHERE hard_delete_after < NOW()  (runs daily)
+
+-- pairings: add transfer cooldown tracker
+pairings        ADD COLUMN primary_transferred_at  TIMESTAMP NULL;
+-- guard: reject transfer if primary_transferred_at > NOW() - 24h
+```
+
 ---
 
 ## 4. Out of Scope (MVP)
@@ -316,7 +412,7 @@ sessions           (id, user_id, refresh_hash, user_agent, ip,
 device_sessions    (id, elder_id, device_fingerprint, refresh_hash,
                     last_seen, revoked_at, created_at)           -- elders (no login)
 
--- Elder profile (extended per Q3 — all fields)
+-- Elder profile (extended per Q3 — all fields + soft delete per 3.10)
 elder_profiles     (user_id PK, birthdate, address_line, district,
                     province, postal_code, blood_type,
                     height_cm, weight_kg,
@@ -328,13 +424,16 @@ elder_profiles     (user_id PK, birthdate, address_line, district,
                     food_dislikes TEXT[],
                     hospital_contact JSONB,   -- {name, phone}
                     doctor_contact JSONB,     -- {name, phone, specialty}
-                    backup_relative JSONB)    -- {name, phone, relation}
+                    backup_relative JSONB,    -- {name, phone, relation}
+                    deleted_at TIMESTAMP NULL,
+                    hard_delete_after TIMESTAMP NULL)   -- PDPA 7-day lock
 
--- Pairing with per-caregiver permissions (Q5)
+-- Pairing with per-caregiver permissions (Q5) + transfer cooldown (3.10)
 pairings           (id, elder_id, caregiver_id, is_primary BOOL,
                     permissions JSONB,        -- {view_dashboard, reply_to_elder,
                                                --  edit_elder_profile, pay_food_orders,
                                                --  decide_emergency, redeem_points}
+                    primary_transferred_at TIMESTAMP NULL,   -- 24h cooldown guard
                     created_at, revoked_at,
                     UNIQUE(elder_id, caregiver_id))
 
@@ -424,18 +523,21 @@ HUNGRY detected → Gemini generates 3 menu suggestions
 - Mock food API (static menu filtered by `conditions`) + fake order lifecycle
 - Mock point wallet (auto-add on order `delivered`)
 
-### Hour 6-7: Emergency Escalation + Invite Flow
+### Hour 6-7: Emergency Escalation + Invite Flow + Profile
 - DANGER flow (all caregivers noti, first-click wins, 5-min escalate)
 - `POST /invites` + accept flow (Flow C)
 - Permission toggle screen (Primary only)
+- Elder Profile: View page + Full Edit page (Caregiver) — section 3.10
 
 ### Hour 7-8: Polish + Demo
+- Elder app "ข้อมูลของฉัน" page (read-only, high contrast) — section 3.10.4
 - Seed demo data (1 elder + 1 primary + 1 secondary caregiver)
 - Demo script (elder says 3 things: HUNGRY, LONELY, DANGER)
 - UI polish + final PDPA check + loom recording
 
 ### Stretch (if time remains)
 - Wake word (picovoice Porcupine or similar)
+- Primary transfer + Soft-delete/restore flows (section 3.10)
 - Gemma on-device
 - Weekly mood chart
 

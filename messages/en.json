@@ -1,0 +1,32 @@
+{
+  "common": {
+    "appName": "Larnma",
+    "next": "Next",
+    "back": "Back",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "submit": "Submit",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "required": "Required",
+    "optional": "Optional",
+    "yes": "Yes",
+    "no": "No",
+    "close": "Close",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "pair": {
+    "uploadImage": "Upload QR Image",
+    "invalidQr": "No QR code found in image"
+  },
+  "caregiver": {
+    "caregiverList": {
+      "primary": "Primary",
+      "revoke": "Remove",
+      "empty": "No other caregivers"
+    }
+  }
+}
