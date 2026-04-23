@@ -15,14 +15,14 @@ export const registerFormSchema = z
     // Elder basic
     elderName: z.string().trim().min(1, 'กรุณากรอกชื่อผู้สูงอายุ'),
     elderPhone: z.string().regex(/^0\d{9}$/, 'เบอร์ผู้สูงอายุ 10 หลัก'),
-    birthdate: z.string().optional().default(''),
+    birthdate: z.string(),
     addressLine: z.string().trim().min(1, 'กรุณากรอกที่อยู่'),
     district: z.string().trim().min(1, 'กรุณากรอกอำเภอ/เขต'),
     province: z.string().trim().min(1, 'กรุณากรอกจังหวัด'),
     postalCode: z.string().regex(/^\d{5}$/, 'รหัสไปรษณีย์ 5 หลัก'),
     // Elder health
-    conditions: z.array(z.string()).default([]),
-    symptoms: z.array(z.string()).default([]),
+    conditions: z.array(z.string()),
+    symptoms: z.array(z.string()),
     medications: z
       .array(
         z.object({
@@ -31,21 +31,21 @@ export const registerFormSchema = z
           time: z.string(),
         }),
       )
-      .default([]),
-    allergies: z.array(z.string()).default([]),
+      ,
+    allergies: z.array(z.string()),
     // Elder emergency
-    hospitalName: z.string().optional().default(''),
-    hospitalPhone: z.string().optional().default(''),
-    doctorName: z.string().optional().default(''),
-    doctorPhone: z.string().optional().default(''),
-    backupName: z.string().optional().default(''),
-    backupPhone: z.string().optional().default(''),
+    hospitalName: z.string(),
+    hospitalPhone: z.string(),
+    doctorName: z.string(),
+    doctorPhone: z.string(),
+    backupName: z.string(),
+    backupPhone: z.string(),
     // Elder optional
-    bloodType: z.string().optional().default(''),
+    bloodType: z.string(),
     heightCm: z.union([z.number(), z.nan()]).optional(),
     weightKg: z.union([z.number(), z.nan()]).optional(),
-    foodPreferences: z.array(z.string()).default([]),
-    foodDislikes: z.array(z.string()).default([]),
+    foodPreferences: z.array(z.string()),
+    foodDislikes: z.array(z.string()),
   })
   .superRefine((v, ctx) => {
     const pairs = [
