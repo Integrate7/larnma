@@ -1,5 +1,5 @@
-import type { GeminiAdapter, GeminiAnalysis, GeminiInput } from './types'
 import type { Intent, Mood } from '@/shared/types'
+import type { GeminiAdapter, GeminiAnalysis, GeminiInput } from './types'
 
 type Rule = {
   mood: Mood

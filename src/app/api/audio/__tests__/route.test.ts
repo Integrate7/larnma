@@ -2,15 +2,15 @@
  * @jest-environment node
  */
 import { NextRequest } from 'next/server'
+import { issueDeviceSession } from '@/services/auth'
+import { resetEventBus, subscribe } from '@/services/eventBus'
+import { COOKIES } from '@/services/jwt'
 import {
   __setRepository,
   createInMemoryRepository,
   getRepository,
 } from '@/services/repository'
-import { issueDeviceSession } from '@/services/auth'
-import { COOKIES } from '@/services/jwt'
 import { DEFAULT_PRIMARY_PERMISSIONS } from '@/shared/types'
-import { resetEventBus, subscribe } from '@/services/eventBus'
 import { POST } from '../route'
 
 function seedElderWithCaregivers() {

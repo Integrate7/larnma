@@ -1,4 +1,10 @@
-export type MicButtonState = 'idle' | 'listening' | 'uploading' | 'done' | 'error'
+export type MicButtonState =
+  | 'idle'
+  | 'wakeListening'
+  | 'listening'
+  | 'uploading'
+  | 'done'
+  | 'error'
 
 export type MicButtonProps = {
   state: MicButtonState
