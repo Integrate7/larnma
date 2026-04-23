@@ -17,7 +17,7 @@ export function useElderEventStream(gs: GS) {
           menuName?: string
           caregiverName?: string
         }
-        if (parsed.kind === 'order_delivered' && parsed.menuName) {
+        if (parsed.kind === 'order_placed' && parsed.menuName) {
           gs.setOrderNotification({
             menuName: parsed.menuName,
             caregiverName: parsed.caregiverName ?? 'หลาน',

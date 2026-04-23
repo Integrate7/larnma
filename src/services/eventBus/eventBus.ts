@@ -9,7 +9,7 @@ export type DashboardEvent =
   | { kind: 'heartbeat' }
 
 export type ElderEvent =
-  | { kind: 'order_delivered'; orderId: string; menuName: string; caregiverName: string }
+  | { kind: 'order_placed'; orderId: string; menuName: string; caregiverName: string }
   | { kind: 'heartbeat' }
 
 type CaregiverListener = (e: DashboardEvent) => void

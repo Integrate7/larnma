@@ -1,6 +1,10 @@
 import '@testing-library/jest-dom'
 
 process.env.JWT_SECRET = process.env.JWT_SECRET ?? 'test-secret-jest-only'
+// Force getGeminiAdapter() to fall back to the mock during tests, even if
+// .env.test / .env.local provide a real GEMINI_API_KEY (which would otherwise
+// cause the audio route to hit the live Gemini API and time out).
+delete process.env.GEMINI_API_KEY
 
 if (typeof global.TextEncoder === 'undefined') {
   const { TextEncoder, TextDecoder } = require('node:util')

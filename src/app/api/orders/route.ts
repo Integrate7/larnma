@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 import { createOrderBodySchema } from '@/services/adapter/schemas/order'
+import { publishToElder } from '@/services/eventBus'
 import {
   checkOriginAllowed,
   checkPermission,
@@ -46,6 +47,14 @@ export async function POST(req: NextRequest) {
     total,
     status: 'pending',
     mockRef: `MOCK-${Date.now()}`,
+  })
+
+  const caregiver = repo.getUserById(auth.userId)
+  publishToElder(body.elderId, {
+    kind: 'order_placed',
+    orderId: order.id,
+    menuName: body.menu[0]?.name ?? 'อาหาร',
+    caregiverName: caregiver?.name ?? 'หลาน',
   })
 
   // auto-advance through full lifecycle (pending→paid→preparing→delivering→delivered)
