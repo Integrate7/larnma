@@ -28,5 +28,5 @@ export function useElderEventStream(gs: GS) {
       }
     }
     return () => es.close()
-  }, [])
+  }, [gs.setOrderNotification])
 }
