@@ -14,7 +14,7 @@
 /e2e/.auth
 
 # next.js
-/.next/
+.next/
 /out/
 next-env.d.ts
 
