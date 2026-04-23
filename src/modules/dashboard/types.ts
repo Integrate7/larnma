@@ -1,4 +1,9 @@
-import type { AudioEvent, ElderLocation, Mood, Notification } from '@/shared/types'
+import type {
+  AudioEvent,
+  ElderLocation,
+  Mood,
+  Notification,
+} from '@/shared/types'
 
 export type PairingInfo = {
   id: string

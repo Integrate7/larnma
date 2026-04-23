@@ -1,7 +1,12 @@
 import { useCallback, useEffect } from 'react'
 import { z } from 'zod'
 import { fetcher } from '@/services/adapter/fetcher'
-import type { AudioEvent, ElderLocation, Notification, Priority } from '@/shared/types'
+import type {
+  AudioEvent,
+  ElderLocation,
+  Notification,
+  Priority,
+} from '@/shared/types'
 import type { useDashboardGlobalState } from './globalState'
 
 const audioEventSchema: z.ZodType<AudioEvent> = z.object({
@@ -65,9 +70,10 @@ type GS = ReturnType<typeof useDashboardGlobalState>
 
 export function useDashboardQueryHandler(gs: GS) {
   const load = useCallback(async () => {
-    const [eventsRes, locationsRes] = await Promise.all([
+    const [eventsRes, locationsRes, pairingsRes] = await Promise.all([
       fetcher('/api/events', listSchema),
       fetcher('/api/elders/location', locationsSchema),
+      fetcher('/api/pairings/me', pairingsSchema),
     ])
     if (eventsRes.success) {
       gs.replaceAll(eventsRes.data.events, eventsRes.data.notifications)
@@ -77,6 +83,9 @@ export function useDashboardQueryHandler(gs: GS) {
     }
     if (locationsRes.success) {
       gs.setLocations(locationsRes.data.locations)
+    }
+    if (pairingsRes.success) {
+      gs.setPairings(pairingsRes.data)
     }
   }, [gs])
 
