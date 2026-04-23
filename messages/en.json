@@ -1,0 +1,21 @@
+{
+  "common": {
+    "appName": "Larnma",
+    "next": "Next",
+    "back": "Back",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "submit": "Submit",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "required": "Required",
+    "optional": "Optional",
+    "yes": "Yes",
+    "no": "No",
+    "close": "Close",
+    "edit": "Edit",
+    "delete": "Delete"
+  }
+}

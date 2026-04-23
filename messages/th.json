@@ -1,0 +1,127 @@
+{
+  "common": {
+    "appName": "หลานม่า",
+    "next": "ถัดไป",
+    "back": "ย้อนกลับ",
+    "confirm": "ยืนยัน",
+    "cancel": "ยกเลิก",
+    "save": "บันทึก",
+    "submit": "ยืนยัน",
+    "loading": "กำลังโหลด...",
+    "error": "เกิดข้อผิดพลาด",
+    "retry": "ลองอีกครั้ง",
+    "required": "จำเป็น",
+    "optional": "ถ้ามี",
+    "yes": "ใช่",
+    "no": "ไม่",
+    "close": "ปิด",
+    "edit": "แก้ไข",
+    "delete": "ลบ"
+  },
+  "tagline": "กดปุ่มเดียว พูดธรรมดา หลานอยู่ข้างคุณเสมอ",
+  "welcome": {
+    "title": "ยินดีต้อนรับสู่หลานม่า",
+    "subtitle": "เริ่มต้นดูแลคนที่คุณรักด้วยเสียง",
+    "startButton": "เริ่มใช้งาน"
+  },
+  "auth": {
+    "phonePlaceholder": "เบอร์โทรศัพท์ 10 หลัก",
+    "otpTitle": "กรอกรหัส OTP",
+    "otpSubtitle": "ส่งไปที่เบอร์ {phone}",
+    "sendOtp": "ส่งรหัส OTP",
+    "verifyOtp": "ยืนยันรหัส",
+    "resendOtp": "ส่งรหัสอีกครั้ง",
+    "invalidPhone": "เบอร์โทรศัพท์ไม่ถูกต้อง",
+    "invalidOtp": "รหัส OTP ไม่ถูกต้อง",
+    "otpExpired": "รหัส OTP หมดอายุ",
+    "otpLocked": "เบอร์นี้ถูกล็อค ลองใหม่ในอีก 30 นาที",
+    "logout": "ออกจากระบบ"
+  },
+  "caregiver": {
+    "profile": {
+      "title": "ข้อมูลของคุณ",
+      "name": "ชื่อของคุณ",
+      "relationship": "ความสัมพันธ์",
+      "relationshipPlaceholder": "เช่น ลูก, หลาน, ญาติ"
+    },
+    "dashboard": {
+      "title": "แดชบอร์ด",
+      "latestStatus": "สถานะล่าสุด",
+      "timeline": "ไทม์ไลน์วันนี้",
+      "weeklyMood": "อารมณ์สัปดาห์นี้",
+      "empty": "ยังไม่มีเหตุการณ์"
+    },
+    "addCaregiver": "เพิ่มคนดูแล",
+    "manageCaregivers": "จัดการผู้ดูแล"
+  },
+  "elder": {
+    "tapToSpeak": "แตะเพื่อพูด",
+    "listening": "กำลังฟัง...",
+    "uploading": "กำลังส่ง...",
+    "done": "เรียบร้อย",
+    "myInfo": "ข้อมูลของฉัน",
+    "callGrandchild": "โทรหาหลาน",
+    "back": "กลับหน้าหลัก"
+  },
+  "pair": {
+    "title": "ให้ลูกหลานช่วยสแกน QR",
+    "subtitle": "เปิดกล้องแล้วสแกน QR จากลูกหลาน",
+    "scanning": "กำลังสแกน...",
+    "permissionDenied": "กรุณาอนุญาตใช้กล้อง",
+    "success": "เชื่อมต่อสำเร็จ"
+  },
+  "register": {
+    "step": "ขั้นที่ {current} จาก {total}",
+    "welcome": "ยินดีต้อนรับ",
+    "phoneTitle": "กรอกเบอร์โทรของคุณ",
+    "profileTitle": "ข้อมูลของคุณ",
+    "consentTitle": "ความยินยอม (PDPA)",
+    "consent": {
+      "audioAi": "อนุญาตให้วิเคราะห์เสียงด้วย AI (จำเป็น)",
+      "healthData": "อนุญาตเก็บข้อมูลสุขภาพ (จำเป็น)",
+      "marketing": "รับข่าวสารและโปรโมชัน (ถ้ามี)"
+    },
+    "elderBasic": "ข้อมูลผู้สูงอายุ",
+    "elderHealth": "ข้อมูลสุขภาพ",
+    "elderEmergency": "เบอร์ฉุกเฉิน",
+    "elderOptional": "ข้อมูลเพิ่มเติม (ถ้ามี)",
+    "review": "ตรวจสอบข้อมูล",
+    "qrTitle": "แสดง QR ให้ผู้สูงอายุสแกน",
+    "qrSubtitle": "QR หมดอายุใน 15 นาที"
+  },
+  "mood": {
+    "DANGER": "ฉุกเฉิน",
+    "PAIN": "เจ็บปวด",
+    "HUNGRY": "หิว",
+    "LONELY": "เหงา",
+    "SAD": "เศร้า",
+    "HAPPY": "อารมณ์ดี",
+    "NORMAL": "ปกติ"
+  },
+  "emergency": {
+    "handleIt": "ฉันจัดการ",
+    "locked": "{name} กำลังดูแลอยู่",
+    "callHospital": "โทรเรียก รพ.",
+    "call1669": "โทร 1669"
+  },
+  "food": {
+    "suggestTitle": "เมนูแนะนำ",
+    "orderNow": "สั่งเลย",
+    "pay": "จ่ายเงิน",
+    "paying": "กำลังจ่ายเงิน...",
+    "paid": "สั่งเรียบร้อย",
+    "preparing": "กำลังทำอาหาร",
+    "delivering": "กำลังจัดส่ง",
+    "delivered": "ส่งถึงแล้ว"
+  },
+  "points": {
+    "balance": "ยอดคะแนน",
+    "history": "ประวัติ",
+    "earned": "ได้คะแนน {amount} จาก {reason}"
+  },
+  "invite": {
+    "landingTitle": "{inviter} เชิญคุณดูแล {elder}",
+    "accept": "ยอมรับ",
+    "expired": "ลิงก์หมดอายุ"
+  }
+}

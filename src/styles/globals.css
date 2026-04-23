@@ -1,0 +1,112 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Larnma — mood palette */
+  --color-mood-danger: var(--mood-danger);
+  --color-mood-pain: var(--mood-pain);
+  --color-mood-sad: var(--mood-sad);
+  --color-mood-lonely: var(--mood-lonely);
+  --color-mood-hungry: var(--mood-hungry);
+  --color-mood-happy: var(--mood-happy);
+  --color-mood-normal: var(--mood-normal);
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: oklch(99.3% 0.002 305);
+  --foreground: oklch(20% 0.03 305);
+  --card: oklch(100% 0 0);
+  --card-foreground: oklch(20% 0.03 305);
+  --popover: oklch(100% 0 0);
+  --popover-foreground: oklch(20% 0.03 305);
+  --primary: oklch(55% 0.19 305);
+  --primary-foreground: oklch(99% 0 0);
+  --secondary: oklch(96% 0.012 305);
+  --secondary-foreground: oklch(20% 0.03 305);
+  --muted: oklch(96% 0.012 305);
+  --muted-foreground: oklch(50% 0.02 305);
+  --accent: oklch(93% 0.025 305);
+  --accent-foreground: oklch(20% 0.03 305);
+  --destructive: oklch(58% 0.24 25);
+  --border: oklch(90% 0.015 305);
+  --input: oklch(90% 0.015 305);
+  --ring: oklch(55% 0.19 305);
+
+  --mood-danger: oklch(58% 0.24 25);
+  --mood-pain: oklch(62% 0.2 50);
+  --mood-sad: oklch(55% 0.15 260);
+  --mood-lonely: oklch(65% 0.13 285);
+  --mood-hungry: oklch(70% 0.16 80);
+  --mood-happy: oklch(72% 0.18 140);
+  --mood-normal: oklch(72% 0.05 240);
+}
+
+.dark {
+  --background: oklch(17% 0.015 305);
+  --foreground: oklch(93% 0.02 305);
+  --card: oklch(21% 0.02 305);
+  --card-foreground: oklch(93% 0.02 305);
+  --popover: oklch(21% 0.02 305);
+  --popover-foreground: oklch(93% 0.02 305);
+  --primary: oklch(68% 0.18 305);
+  --primary-foreground: oklch(17% 0.015 305);
+  --secondary: oklch(26% 0.03 305);
+  --secondary-foreground: oklch(93% 0.02 305);
+  --muted: oklch(26% 0.03 305);
+  --muted-foreground: oklch(70% 0.04 305);
+  --accent: oklch(29% 0.04 305);
+  --accent-foreground: oklch(93% 0.02 305);
+  --destructive: oklch(70% 0.19 25);
+  --border: oklch(37% 0.04 305);
+  --input: oklch(33% 0.04 305);
+  --ring: oklch(68% 0.18 305);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Elder-mode: large touch + high contrast */
+.elder-mode {
+  font-size: 20px;
+  line-height: 1.6;
+}
+
+.elder-mode button,
+.elder-mode [role='button'] {
+  min-height: 56px;
+}
