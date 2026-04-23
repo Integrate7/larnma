@@ -17,10 +17,12 @@ export function ElderFoodView({ state, handler }: Props) {
 
   if (state.requestStatus === 'requested') {
     return (
-      <main className="elder-mode flex min-h-screen flex-col items-center justify-center gap-6 p-6">
-        <CheckCircle2 className="h-20 w-20 text-green-500" />
+      <main className="elder-mode mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-6 px-5 py-6">
+        <CheckCircle2 className="h-20 w-20" style={{ color: 'var(--ok)' }} />
         <p className="text-center text-3xl font-bold">{t('food.requested')}</p>
-        <p className="text-center text-xl text-muted-foreground">{t('food.waiting')}</p>
+        <p className="serif-caption text-center text-xl">
+          {t('food.waiting')}
+        </p>
         <Button asChild size="xl" variant="outline">
           <Link href="/elder">
             <ArrowLeft className="mr-2 h-5 w-5" />
@@ -32,15 +34,20 @@ export function ElderFoodView({ state, handler }: Props) {
   }
 
   return (
-    <main className="elder-mode flex min-h-screen flex-col gap-6 p-6">
-      <div className="flex items-center gap-3">
+    <main className="elder-mode mx-auto flex min-h-screen max-w-xl flex-col gap-5 px-5 py-6">
+      <header className="flex items-center gap-3 border-b border-[var(--rule)] pb-3">
         <Button asChild size="icon" variant="outline" aria-label={t('elder.back')}>
           <Link href="/elder">
-            <ArrowLeft className="h-6 w-6" />
+            <ArrowLeft className="h-5 w-5" />
           </Link>
         </Button>
-        <h1 className="text-3xl font-bold">{t('food.suggestTitle')}</h1>
-      </div>
+        <div>
+          <div className="mono-label">เมนูแนะนำ</div>
+          <h1 className="mt-1 text-xl font-semibold tracking-tight">
+            {t('food.suggestTitle')}
+          </h1>
+        </div>
+      </header>
 
       {state.loading ? (
         <div className="flex flex-col gap-4">
@@ -51,7 +58,10 @@ export function ElderFoodView({ state, handler }: Props) {
       ) : null}
 
       {state.error ? (
-        <p role="alert" className="text-destructive text-xl">
+        <p
+          role="alert"
+          className="rounded-md border border-[color-mix(in_oklch,var(--danger)_35%,var(--rule))] bg-[var(--danger-wash)] p-3 text-sm text-[var(--danger)]"
+        >
           {state.error}
         </p>
       ) : null}
@@ -65,21 +75,28 @@ export function ElderFoodView({ state, handler }: Props) {
               return (
                 <Card
                   key={cardKey}
-                  className="border-destructive/50 bg-destructive/5 opacity-80"
+                  accent="crit"
                   data-testid={`food-item-${item.id}`}
                 >
                   <CardContent className="flex flex-col gap-2 p-5">
                     <div className="flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-destructive" />
-                      <span className="text-xl font-semibold text-destructive">{item.name}</span>
-                      <span className="text-muted-foreground">฿{item.price}</span>
+                      <AlertTriangle className="h-5 w-5 text-[var(--danger)]" />
+                      <span className="text-xl font-semibold text-[var(--danger)]">
+                        {item.name}
+                      </span>
+                      <span className="mono-label">฿{item.price}</span>
                     </div>
-                    <p className="text-destructive text-sm">
+                    <p className="text-sm text-[var(--danger)]">
                       แพ้: {item.allergyMatch.join(', ')}
-                      {item.conditionMatch.length > 0 ? ` · ไม่เหมาะกับโรค: ${item.conditionMatch.join(', ')}` : ''}
+                      {item.conditionMatch.length > 0
+                        ? ` · ไม่เหมาะกับโรค: ${item.conditionMatch.join(', ')}`
+                        : ''}
                     </p>
                     {item.suggestedAlternative ? (
-                      <p className="text-sm text-green-700">
+                      <p
+                        className="serif-caption"
+                        style={{ color: 'var(--ok)' }}
+                      >
                         แนะนำแทน: {item.suggestedAlternative}
                       </p>
                     ) : null}
@@ -90,17 +107,23 @@ export function ElderFoodView({ state, handler }: Props) {
             return (
               <Card
                 key={cardKey}
-                className={`cursor-pointer transition-colors ${isSelected ? 'border-primary border-2' : ''}`}
+                accent="log"
+                className={`cursor-pointer transition-colors ${
+                  isSelected ? 'border-[var(--brand)] border-2' : ''
+                }`}
                 onClick={() => handler.onSelect(item.id)}
                 data-testid={`food-item-${item.id}`}
               >
                 <CardContent className="flex items-center justify-between p-5">
                   <div className="flex flex-col gap-1">
                     <span className="text-2xl font-semibold">{item.name}</span>
-                    <span className="text-muted-foreground text-lg">฿{item.price}</span>
+                    <span className="mono-label">฿{item.price}</span>
                   </div>
                   {isSelected ? (
-                    <CheckCircle2 className="h-8 w-8 text-primary" />
+                    <CheckCircle2
+                      className="h-8 w-8"
+                      style={{ color: 'var(--brand)' }}
+                    />
                   ) : null}
                 </CardContent>
               </Card>
@@ -113,6 +136,7 @@ export function ElderFoodView({ state, handler }: Props) {
         <Button
           size="xl"
           variant="default"
+          className="w-full"
           disabled={state.requestStatus === 'requesting'}
           onClick={handler.onConfirm}
           data-testid="food-confirm-btn"
@@ -125,7 +149,10 @@ export function ElderFoodView({ state, handler }: Props) {
       ) : null}
 
       {state.requestStatus === 'error' ? (
-        <p role="alert" className="text-destructive text-center text-xl">
+        <p
+          role="alert"
+          className="rounded-md border border-[color-mix(in_oklch,var(--danger)_35%,var(--rule))] bg-[var(--danger-wash)] p-3 text-center text-sm text-[var(--danger)]"
+        >
           {state.error}
         </p>
       ) : null}
