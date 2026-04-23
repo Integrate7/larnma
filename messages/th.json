@@ -57,7 +57,12 @@
       "locationUpdated": "อัพเดตล่าสุด:"
     },
     "addCaregiver": "เพิ่มคนดูแล",
-    "manageCaregivers": "จัดการผู้ดูแล"
+    "manageCaregivers": "จัดการผู้ดูแล",
+    "caregiverList": {
+      "primary": "หลัก",
+      "revoke": "ลบ",
+      "empty": "ยังไม่มีคนดูแลอื่น"
+    }
   },
   "elder": {
     "tapToSpeak": "แตะเพื่อพูด",

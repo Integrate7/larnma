@@ -21,5 +21,12 @@
   "pair": {
     "uploadImage": "Upload QR Image",
     "invalidQr": "No QR code found in image"
+  },
+  "caregiver": {
+    "caregiverList": {
+      "primary": "Primary",
+      "revoke": "Remove",
+      "empty": "No other caregivers"
+    }
   }
 }
