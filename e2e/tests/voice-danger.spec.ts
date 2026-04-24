@@ -37,6 +37,16 @@ test.describe('Voice → DANGER event', () => {
       timeout: 15_000,
     })
 
+    // The critical-alert dialog auto-opens for unacked critical cases and
+    // `aria-hidden`s the rest of the page — dismiss it so we can reach the
+    // card-level "ฉันจัดการ" button the rest of this test exercises.
+    const criticalDialog = cgPage.getByRole('dialog', {
+      name: /เหตุฉุกเฉิน/,
+    })
+    await expect(criticalDialog).toBeVisible({ timeout: 10_000 })
+    await cgPage.keyboard.press('Escape')
+    await expect(criticalDialog).not.toBeVisible()
+
     const ackButton = cgPage
       .getByTestId('dashboard-notis')
       .getByRole('button', { name: /ฉันจัดการ/ })

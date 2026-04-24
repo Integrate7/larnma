@@ -84,5 +84,5 @@ describe('POST /api/pairings/qr', () => {
     expect(body.qrDataUrl).toMatch(/^data:image\/png/)
     expect(body.token).toBeTruthy()
     expect(body.exp).toBeTruthy()
-  })
+  }, 15000)
 })

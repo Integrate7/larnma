@@ -87,6 +87,34 @@ make sonar-scan
 On failure → report `SonarQube scan failed` + output tail. Stop.
 If the failure is "server not running", suggest `make sonar-up` first.
 
+After the scan completes, enforce the **Quality Gate** on the analysis result. ALL conditions below must pass — any violation is a HARD FAIL:
+
+| Metric                 | Threshold | Fail when       |
+| ---------------------- | --------- | --------------- |
+| Security issues        | `0`       | `> 0`           |
+| Reliability issues     | `0`       | `> 0`           |
+| Maintainability issues | `0`       | `> 0`           |
+| Security Hotspots      | `0`       | `> 0` unreviewed |
+| Coverage               | `> 80%`   | `≤ 80%`         |
+| Duplications           | `< 2%`    | `≥ 2%`          |
+
+Report format on quality gate fail:
+
+```
+SonarQube Quality Gate FAILED
+
+  Security issues         : 2   (threshold: 0)
+  Reliability issues      : 0   (threshold: 0)
+  Maintainability issues  : 5   (threshold: 0)
+  Security Hotspots       : 1   (threshold: 0 unreviewed)
+  Coverage                : 74% (threshold: > 80%)
+  Duplications            : 3.1% (threshold: < 2%)
+
+Open the SonarQube dashboard, resolve the issues above, then re-run /verify.
+```
+
+Stop. Do NOT report success.
+
 ---
 
 ## Success Output
@@ -96,7 +124,7 @@ Verify complete — all gates passed:
   1. Lint        — passed
   2. Unit tests  — passed (coverage ≥ 80% on all changed files)
   3. Build       — passed
-  4. SonarQube   — passed
+  4. SonarQube   — passed (Security 0, Reliability 0, Maintainability 0, Hotspots 0, Coverage > 80%, Duplications < 2%)
 
 Next: run /ship to execute E2E + self-review and open a PR.
 ```

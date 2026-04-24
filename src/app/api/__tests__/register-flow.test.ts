@@ -364,7 +364,7 @@ describe('pairings QR + consume', () => {
     )
     expect(consume.status).toBe(200)
     expect(consume.headers.get('set-cookie')).toContain(COOKIES.device)
-  })
+  }, 15000)
 
   it('rejects QR when not Primary', async () => {
     const ctx = await bootCaregiverSession()

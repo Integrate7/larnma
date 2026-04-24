@@ -51,7 +51,8 @@ const pairingsSchema = z.array(
     id: z.string(),
     elderId: z.string(),
     isPrimary: z.boolean(),
-    elderName: z.string(),
+    elderName: z.string().nullable(),
+    elderPhone: z.string().nullable(),
   }),
 )
 

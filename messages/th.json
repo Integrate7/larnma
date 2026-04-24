@@ -119,7 +119,16 @@
     "handleIt": "ฉันจัดการ",
     "locked": "{name} กำลังดูแลอยู่",
     "callHospital": "โทรเรียก รพ.",
-    "call1669": "โทร 1669"
+    "call1669": "โทร 1669",
+    "alert": {
+      "titleCritical": "🚨 เหตุฉุกเฉิน",
+      "titleHigh": "⚠️ แจ้งเตือนด่วน",
+      "summary": "{count} เหตุการณ์ต้องจัดการ",
+      "callElder": "โทรหายาย",
+      "call1669": "โทร 1669",
+      "close": "ปิด",
+      "noElderPhone": "ยังไม่ได้บันทึกเบอร์ยาย"
+    }
   },
   "food": {
     "orderFood": "สั่งอาหาร",

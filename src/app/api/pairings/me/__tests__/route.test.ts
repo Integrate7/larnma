@@ -76,7 +76,7 @@ describe('GET /api/pairings/me', () => {
     expect(typeof body[0].id).toBe('string')
   })
 
-  it('falls back to empty elderName when the elder user record is missing', async () => {
+  it('falls back to null elderName when the elder user record is missing', async () => {
     const repo = getRepository()
     const cg = repo.createUser({ role: 'caregiver', phone: '0811', name: 'CG' })
     repo.createPairing({
@@ -91,7 +91,7 @@ describe('GET /api/pairings/me', () => {
     expect(r.status).toBe(200)
     const body = await r.json()
     expect(body).toHaveLength(1)
-    expect(body[0].elderName).toBe('')
+    expect(body[0].elderName).toBeNull()
   })
 
   it('returns multiple pairings', async () => {
@@ -106,5 +106,34 @@ describe('GET /api/pairings/me', () => {
     const r = await GET(req(cookie))
     const body = await r.json()
     expect(body).toHaveLength(2)
+  })
+
+  it('includes elderName and elderPhone joined from the elder user', async () => {
+    const { cookie, elderId } = await bootCaregiver()
+    const r = await GET(req(cookie))
+    expect(r.status).toBe(200)
+    const body = await r.json()
+    expect(body[0]).toMatchObject({
+      elderId,
+      elderName: 'ย่า',
+      elderPhone: '0822',
+    })
+  })
+
+  it('returns null elderName/elderPhone when the elder user is missing', async () => {
+    const repo = getRepository()
+    const cg = repo.createUser({ role: 'caregiver', phone: '0811', name: 'CG' })
+    repo.createPairing({
+      elderId: 'missing-elder-id',
+      caregiverId: cg.id,
+      isPrimary: true,
+      permissions: DEFAULT_PRIMARY_PERMISSIONS,
+    })
+    const s = await issueCaregiverSession({ userId: cg.id })
+    const cookie = `${COOKIES.access}=${s.accessToken}`
+    const r = await GET(req(cookie))
+    const body = await r.json()
+    expect(body[0].elderName).toBeNull()
+    expect(body[0].elderPhone).toBeNull()
   })
 })

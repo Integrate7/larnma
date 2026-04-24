@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/atom/dialog'
+import { CriticalAlertDialog } from '@/components/molecule/criticalAlertDialog'
 import { MoodChip } from '@/components/molecule/moodChip'
 import { PriorityBadge } from '@/components/molecule/priorityBadge'
 import type { Mood, Notification } from '@/shared/types'
@@ -39,9 +40,10 @@ type PendingOrder = {
 
 export function DashboardPage() {
   const t = useTranslations()
-  const { state, handler } = useDashboardController()
+  const { state, handler, alerts } = useDashboardController()
   const latest = state.events[0]
   const primary = state.pairings.find((p) => p.isPrimary)
+  const headerPairing = primary ?? state.pairings[0] ?? null
   const [pendingOrder, setPendingOrder] = useState<PendingOrder | null>(null)
 
   const handleMenuClick = (
@@ -72,7 +74,9 @@ export function DashboardPage() {
         <div>
           <div className="mono-label">{t('caregiver.dashboard.title')}</div>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-            {primary?.elderName ? `คุณ${primary.elderName}วันนี้` : 'วันนี้'}
+            {headerPairing?.elderName
+              ? `คุณ${headerPairing.elderName}วันนี้`
+              : 'วันนี้'}
           </h1>
         </div>
         <div
@@ -286,6 +290,8 @@ export function DashboardPage() {
           </div>
         </CardContent>
       </Card>
+
+      <CriticalAlertDialog {...alerts} />
 
       <Dialog
         open={!!pendingOrder}
