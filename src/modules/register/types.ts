@@ -55,4 +55,6 @@ export type RegisterHandler = {
   submitConsent: () => Promise<void>
   submitElder: () => Promise<void>
   generateQr: () => Promise<void>
+  downloadQr: () => void
+  goToDashboard: () => void
 }

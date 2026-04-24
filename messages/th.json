@@ -104,7 +104,9 @@
     "elderOptional": "ข้อมูลเพิ่มเติม (ถ้ามี)",
     "review": "ตรวจสอบข้อมูล",
     "qrTitle": "แสดง QR ให้ผู้สูงอายุสแกน",
-    "qrSubtitle": "QR หมดอายุใน 15 นาที"
+    "qrSubtitle": "QR หมดอายุใน 15 นาที",
+    "qrDownload": "ดาวน์โหลด QR Code",
+    "qrGoToDashboard": "ไปหน้าแดชบอร์ด"
   },
   "mood": {
     "DANGER": "ฉุกเฉิน",

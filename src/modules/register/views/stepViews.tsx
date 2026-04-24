@@ -637,10 +637,14 @@ export function QrStep({
   qrDataUrl,
   pairingToken,
   onGenerate,
+  onDownload,
+  onGoToDashboard,
 }: Readonly<{
   qrDataUrl: string | null
   pairingToken: string | null
   onGenerate: () => void
+  onDownload: () => void
+  onGoToDashboard: () => void
 }>) {
   const t = useTranslations()
   return (
@@ -654,18 +658,41 @@ export function QrStep({
       <CardContent className="flex flex-col items-center gap-4">
         <p className="serif-caption text-center">{t('register.qrSubtitle')}</p>
         {qrDataUrl ? (
-          <QrDisplay
-            value={pairingToken ?? ''}
-            dataUrl={qrDataUrl}
-            size={280}
-            alt="pairing QR"
-            code={
-              pairingToken ? pairingToken.slice(0, 6).toUpperCase() : undefined
-            }
-            expiresAt={
-              pairingToken ? new Date(Date.now() + 15 * 60 * 1000) : undefined
-            }
-          />
+          <>
+            <QrDisplay
+              value={pairingToken ?? ''}
+              dataUrl={qrDataUrl}
+              size={280}
+              alt="pairing QR"
+              code={
+                pairingToken
+                  ? pairingToken.slice(0, 6).toUpperCase()
+                  : undefined
+              }
+              expiresAt={
+                pairingToken ? new Date(Date.now() + 15 * 60 * 1000) : undefined
+              }
+            />
+            <div className="flex w-full flex-col gap-2">
+              <Button
+                variant="outline"
+                onClick={onDownload}
+                size="xl"
+                className="w-full"
+                data-testid="qr-download"
+              >
+                {t('register.qrDownload')}
+              </Button>
+              <Button
+                onClick={onGoToDashboard}
+                size="xl"
+                className="w-full"
+                data-testid="qr-go-dashboard"
+              >
+                {t('register.qrGoToDashboard')}
+              </Button>
+            </div>
+          </>
         ) : (
           <Button
             onClick={onGenerate}
