@@ -313,6 +313,120 @@ describe('useRegisterHandler', () => {
     expect(result.current.gs.state.qrDataUrl).toBeNull()
   })
 
+  // ─── Post-QR actions ─────────────────────────────────────────────────────────
+
+  describe('downloadQr', () => {
+    // Base64 for bytes [1, 2, 3] — keeps test assertions simple and exact.
+    const TEST_DATA_URL = 'data:image/png;base64,AQID'
+
+    // jsdom's URL lacks createObjectURL / revokeObjectURL, so stub them in
+    // directly for these tests. A spy on a missing property would throw.
+    function installBlobMocks() {
+      const createSpy = jest.fn<string, [Blob]>(() => 'blob:mock-url')
+      const revokeSpy = jest.fn<void, [string]>(() => {})
+      ;(URL as unknown as { createObjectURL: typeof createSpy }).createObjectURL =
+        createSpy
+      ;(URL as unknown as { revokeObjectURL: typeof revokeSpy }).revokeObjectURL =
+        revokeSpy
+      return { createSpy, revokeSpy }
+    }
+
+    it('converts the data URL into a PNG blob and triggers a download', () => {
+      const { result } = renderHandler()
+      act(() => {
+        result.current.gs.setElderId('ELDER-42')
+        result.current.gs.setQrDataUrl(TEST_DATA_URL)
+      })
+
+      const { createSpy, revokeSpy } = installBlobMocks()
+      const click = jest.fn()
+      const anchor = {
+        href: '',
+        download: '',
+        click,
+      } as unknown as HTMLAnchorElement
+      const createElementSpy = jest
+        .spyOn(document, 'createElement')
+        .mockImplementationOnce(() => anchor)
+
+      act(() => {
+        result.current.handler.downloadQr()
+      })
+
+      expect(createSpy).toHaveBeenCalledTimes(1)
+      const blob = createSpy.mock.calls[0]?.[0] as Blob
+      expect(blob).toBeInstanceOf(Blob)
+      expect(blob.type).toBe('image/png')
+      expect(blob.size).toBe(3) // decoded bytes: [1, 2, 3]
+
+      expect(createElementSpy).toHaveBeenCalledWith('a')
+      expect(anchor.href).toBe('blob:mock-url')
+      expect(anchor.download).toBe('larnma-pairing-ELDER-42.png')
+      expect(click).toHaveBeenCalledTimes(1)
+      expect(revokeSpy).toHaveBeenCalledWith('blob:mock-url')
+    })
+
+    it('falls back to a generic filename when elderId is null', () => {
+      const { result } = renderHandler()
+      act(() => {
+        result.current.gs.setQrDataUrl(TEST_DATA_URL)
+      })
+
+      installBlobMocks()
+      const click = jest.fn()
+      const anchor = {
+        href: '',
+        download: '',
+        click,
+      } as unknown as HTMLAnchorElement
+      jest
+        .spyOn(document, 'createElement')
+        .mockImplementationOnce(() => anchor)
+
+      act(() => {
+        result.current.handler.downloadQr()
+      })
+
+      expect(anchor.download).toBe('larnma-pairing-qr.png')
+      expect(click).toHaveBeenCalledTimes(1)
+    })
+
+    it('is a no-op when qrDataUrl is null', () => {
+      const { result } = renderHandler()
+      const { createSpy } = installBlobMocks()
+
+      act(() => {
+        result.current.handler.downloadQr()
+      })
+
+      expect(createSpy).not.toHaveBeenCalled()
+    })
+
+    it('is a no-op when qrDataUrl is not a valid data URL', () => {
+      const { result } = renderHandler()
+      act(() => {
+        result.current.gs.setQrDataUrl('https://example.com/not-a-data-url.png')
+      })
+      const { createSpy } = installBlobMocks()
+
+      act(() => {
+        result.current.handler.downloadQr()
+      })
+
+      expect(createSpy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('goToDashboard', () => {
+    it('navigates to /dashboard', () => {
+      const { result } = renderHandler()
+      act(() => {
+        result.current.handler.goToDashboard()
+      })
+      expect(mockNavigate).toHaveBeenCalledWith('/dashboard')
+    })
+  })
+
   it('next: walks through the full happy path (including choice step)', async () => {
     mockFetchSequence([
       // sendOtp

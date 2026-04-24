@@ -82,6 +82,8 @@ export function RegisterPage() {
           qrDataUrl={state.qrDataUrl}
           pairingToken={state.pairingToken}
           onGenerate={handler.generateQr}
+          onDownload={handler.downloadQr}
+          onGoToDashboard={handler.goToDashboard}
         />
       ) : null}
     </main>

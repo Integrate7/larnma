@@ -219,6 +219,33 @@ export function useRegisterHandler(args: {
     navigate('/api/auth/google')
   }
 
+  const downloadQr = () => {
+    const qrDataUrl = gs.state.qrDataUrl
+    if (!qrDataUrl) return
+    // Convert the displayed data URL into a real PNG Blob. iOS Safari and some
+    // Android WebViews open raw `data:` download links inline instead of saving
+    // them, which yields a "downloaded" file the scanner can't read.
+    const match = qrDataUrl.match(/^data:(.+?);base64,(.+)$/)
+    if (!match) return
+    const [, mime, b64] = match
+    const binary = globalThis.atob(b64)
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i)
+    const blob = new Blob([bytes], { type: mime })
+    const objectUrl = URL.createObjectURL(blob)
+    const elderId = gs.state.elderId
+    const filename = `larnma-pairing-${elderId ?? 'qr'}.png`
+    const anchor = globalThis.document.createElement('a')
+    anchor.href = objectUrl
+    anchor.download = filename
+    anchor.click()
+    URL.revokeObjectURL(objectUrl)
+  }
+
+  const goToDashboard = () => {
+    navigate('/dashboard')
+  }
+
   const next = async () => {
     const step = gs.state.step
     if (step === 'welcome') gs.goto('choice')
@@ -256,5 +283,7 @@ export function useRegisterHandler(args: {
     submitConsent,
     submitElder,
     generateQr,
+    downloadQr,
+    goToDashboard,
   }
 }
